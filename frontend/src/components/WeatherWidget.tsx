@@ -28,7 +28,6 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({
   onRefresh,
   onSelectCity
 }) => {
-  const [unit, setUnit] = useState<'C' | 'F'>('C');
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<CitySearchResult[]>([]);
@@ -36,10 +35,6 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({
 
   const formatTemp = (celsius?: number) => {
     if (celsius === undefined || celsius === null) return '--';
-    if (unit === 'F') {
-      const f = Math.round((celsius * 9) / 5 + 32);
-      return `${f}°F`;
-    }
     return `${Math.round(celsius)}°C`;
   };
 
@@ -88,7 +83,7 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({
         <div className="flex items-center gap-2">
           <button
             onClick={() => setSearchOpen(!searchOpen)}
-            className="flex items-center gap-1.5 text-sm font-semibold text-slate-800 hover:text-blue-600 px-2 py-1 rounded-lg hover:bg-slate-100 transition-colors"
+            className="flex items-center gap-1.5 text-sm font-semibold text-slate-800 hover:text-blue-600 px-2 py-1 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
           >
             <MapPin className="w-4 h-4 text-blue-600" />
             <span>{weather?.city || 'Standort wird ermittelt...'}</span>
@@ -96,32 +91,14 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({
           </button>
         </div>
 
-        <div className="flex items-center gap-1.5">
-          {/* Unit Toggle */}
-          <div className="flex items-center bg-slate-100 rounded-lg p-0.5 text-xs font-bold border border-slate-200">
-            <button
-              onClick={() => setUnit('C')}
-              className={`px-2 py-0.5 rounded ${unit === 'C' ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-600'}`}
-            >
-              °C
-            </button>
-            <button
-              onClick={() => setUnit('F')}
-              className={`px-2 py-0.5 rounded ${unit === 'F' ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-600'}`}
-            >
-              °F
-            </button>
-          </div>
-
-          <button
-            onClick={onRefresh}
-            disabled={loading}
-            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors"
-            title="Wettervorhersage aktualisieren"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          </button>
-        </div>
+        <button
+          onClick={onRefresh}
+          disabled={loading}
+          className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
+          title="Wettervorhersage aktualisieren"
+        >
+          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+        </button>
       </div>
 
       {/* City search bar dropdown */}
