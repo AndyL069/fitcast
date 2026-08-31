@@ -46,10 +46,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
   };
 
-  const handleAuthentikLogin = () => {
-    window.location.href = '/api/auth/authentik/login';
-  };
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
       <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-200 relative overflow-hidden">
@@ -163,14 +159,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <button
             type="submit"
             disabled={loading}
-            className="w-full mt-2 flex items-center justify-center gap-2 py-2.5 px-4 bg-blue-600 hover:bg-blue-700 active:scale-98 text-white rounded-xl text-sm font-bold shadow-md shadow-blue-600/25 transition-all duration-200 disabled:opacity-50"
+            className="w-full mt-2 flex items-center justify-center gap-2 py-2.5 px-4 bg-blue-600 hover:bg-blue-700 active:scale-98 text-white rounded-xl text-sm font-bold shadow-md shadow-blue-600/25 transition-all duration-200 disabled:opacity-50 cursor-pointer"
           >
             <span>{loading ? 'Bitte warten...' : tab === 'login' ? 'Anmelden' : 'Registrieren & Loslegen'}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </form>
 
-        {/* Authentik SSO Option */}
+        {/* Authentik SSO Option (Direct Native Anchor Link) */}
         {authentikEnabled && (
           <div className="mt-5 pt-4 border-t border-slate-100">
             <div className="relative flex py-1 items-center mb-3">
@@ -179,14 +175,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <div className="flex-grow border-t border-slate-200"></div>
             </div>
 
-            <button
-              type="button"
-              onClick={handleAuthentikLogin}
-              className="w-full flex items-center justify-center gap-2.5 py-2.5 px-4 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl text-xs sm:text-sm font-bold shadow-md shadow-orange-500/20 active:scale-98 transition-all duration-200"
+            <a
+              href="/api/auth/authentik/login"
+              className="w-full flex items-center justify-center gap-2.5 py-2.5 px-4 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl text-xs sm:text-sm font-bold shadow-md shadow-orange-500/20 active:scale-98 transition-all duration-200 cursor-pointer select-none text-decoration-none"
             >
-              <Shield className="w-4 h-4" />
+              <Shield className="w-4 h-4 shrink-0" />
               <span>Mit Authentik anmelden (SSO)</span>
-            </button>
+            </a>
           </div>
         )}
 
