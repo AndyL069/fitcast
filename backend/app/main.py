@@ -5,7 +5,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 from app.database import engine, Base
-from app.routes import items, weather, outfit
+from app.routes import items, weather, outfit, auth
 
 # Create DB tables
 Base.metadata.create_all(bind=engine)
@@ -29,6 +29,7 @@ app.add_middleware(
 app.mount("/uploads", StaticFiles(directory=str(settings.UPLOADS_DIR)), name="uploads")
 
 # Include API Routers
+app.include_router(auth.router)
 app.include_router(items.router)
 app.include_router(weather.router)
 app.include_router(outfit.router)

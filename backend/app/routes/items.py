@@ -1,27 +1,44 @@
 import uuid
 from pathlib import Path
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models import ClothingItem
+from app.models import ClothingItem, User
 from app.schemas import ClothingItemResponse, ClothingItemUpdate
 from app.config import settings
+from app.routes.auth import get_optional_user
 
 router = APIRouter(prefix="/api/items", tags=["items"])
 
 @router.get("", response_model=List[ClothingItemResponse])
-def list_items(category: Optional[str] = None, db: Session = Depends(get_db)):
+def list_items(
+    category: Optional[str] = None,
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_optional_user)
+):
     query = db.query(ClothingItem)
+    if current_user:
+        query = query.filter(ClothingItem.user_id == current_user.id)
+    else:
+        query = query.filter(ClothingItem.user_id == None)
+
     if category:
         query = query.filter(ClothingItem.category == category.lower())
     return query.order_by(ClothingItem.created_at.desc()).all()
 
 @router.get("/{item_id}", response_model=ClothingItemResponse)
-def get_item(item_id: int, db: Session = Depends(get_db)):
-    item = db.query(ClothingItem).filter(ClothingItem.id == item_id).first()
+def get_item(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_optional_user)
+):
+    query = db.query(ClothingItem).filter(ClothingItem.id == item_id)
+    if current_user:
+        query = query.filter(ClothingItem.user_id == current_user.id)
+    item = query.first()
     if not item:
-        raise HTTPException(status_code=404, detail="Item not found")
+        raise HTTPException(status_code=404, detail="Kleidungsstück nicht gefunden.")
     return item
 
 @router.post("", response_model=ClothingItemResponse)
@@ -29,14 +46,15 @@ async def create_item(
     category: str = Form(...),
     name: str = Form(...),
     color: str = Form("neutral"),
-    pattern: str = Form("solid"),
-    fabric: str = Form("cotton"),
+    pattern: str = Form("einfarbig"),
+    fabric: str = Form("Baumwolle"),
     warmth_level: int = Form(3),
     formality: str = Form("casual"),
     waterproof: str = Form("false"),
     image: Optional[UploadFile] = File(None),
     image_url_override: Optional[str] = Form(None),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_optional_user)
 ):
     final_image_url = image_url_override or "/uploads/placeholder.jpg"
 
@@ -54,6 +72,7 @@ async def create_item(
     is_waterproof = waterproof.lower() in ("true", "1", "yes")
 
     db_item = ClothingItem(
+        user_id=current_user.id if current_user else None,
         category=category.lower(),
         name=name,
         image_url=final_image_url,
@@ -70,10 +89,18 @@ async def create_item(
     return db_item
 
 @router.put("/{item_id}", response_model=ClothingItemResponse)
-def update_item(item_id: int, item_update: ClothingItemUpdate, db: Session = Depends(get_db)):
-    db_item = db.query(ClothingItem).filter(ClothingItem.id == item_id).first()
+def update_item(
+    item_id: int,
+    item_update: ClothingItemUpdate,
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_optional_user)
+):
+    query = db.query(ClothingItem).filter(ClothingItem.id == item_id)
+    if current_user:
+        query = query.filter(ClothingItem.user_id == current_user.id)
+    db_item = query.first()
     if not db_item:
-        raise HTTPException(status_code=404, detail="Item not found")
+        raise HTTPException(status_code=404, detail="Kleidungsstück nicht gefunden.")
     
     update_data = item_update.model_dump(exclude_unset=True)
     for key, value in update_data.items():
@@ -85,10 +112,17 @@ def update_item(item_id: int, item_update: ClothingItemUpdate, db: Session = Dep
     return db_item
 
 @router.delete("/{item_id}")
-def delete_item(item_id: int, db: Session = Depends(get_db)):
-    db_item = db.query(ClothingItem).filter(ClothingItem.id == item_id).first()
+def delete_item(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_optional_user)
+):
+    query = db.query(ClothingItem).filter(ClothingItem.id == item_id)
+    if current_user:
+        query = query.filter(ClothingItem.user_id == current_user.id)
+    db_item = query.first()
     if not db_item:
-        raise HTTPException(status_code=404, detail="Item not found")
+        raise HTTPException(status_code=404, detail="Kleidungsstück nicht gefunden.")
     
     # Clean up local image if not placeholder
     if db_item.image_url.startswith("/uploads/") and "placeholder" not in db_item.image_url:
@@ -102,4 +136,4 @@ def delete_item(item_id: int, db: Session = Depends(get_db)):
 
     db.delete(db_item)
     db.commit()
-    return {"message": "Item deleted successfully", "id": item_id}
+    return {"message": "Kleidungsstück erfolgreich gelöscht.", "id": item_id}
