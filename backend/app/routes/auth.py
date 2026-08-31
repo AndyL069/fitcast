@@ -67,6 +67,13 @@ def set_auth_cookie(response: Response, user_id: int, email: str):
         path="/"
     )
 
+def get_redirect_uri(request: Request) -> str:
+    if settings.AUTHENTIK_REDIRECT_URI:
+        return settings.AUTHENTIK_REDIRECT_URI
+    proto = request.headers.get("x-forwarded-proto", request.url.scheme)
+    host = request.headers.get("x-forwarded-host", request.headers.get("host"))
+    return f"{proto}://{host}/api/auth/authentik/callback"
+
 @router.post("/register", response_model=UserResponse)
 def register_user(payload: UserCreate, response: Response, db: Session = Depends(get_db)):
     existing_user = db.query(User).filter(User.email == payload.email.lower()).first()
@@ -133,7 +140,7 @@ async def authentik_login(request: Request, response: Response):
         )
 
     state = secrets.token_urlsafe(32)
-    redirect_uri = settings.AUTHENTIK_REDIRECT_URI or str(request.url_for("authentik_callback"))
+    redirect_uri = get_redirect_uri(request)
     auth_url = await authentik_service.build_authorization_url(redirect_uri=redirect_uri, state=state)
 
     resp = RedirectResponse(url=auth_url, status_code=status.HTTP_302_FOUND)
@@ -163,7 +170,7 @@ async def authentik_callback(
     if not expected_state or expected_state != state:
         return RedirectResponse(url="/?auth_error=invalid_state", status_code=status.HTTP_302_FOUND)
 
-    redirect_uri = settings.AUTHENTIK_REDIRECT_URI or str(request.url_for("authentik_callback"))
+    redirect_uri = get_redirect_uri(request)
 
     try:
         user_info = await authentik_service.exchange_code_for_user(code=code, redirect_uri=redirect_uri)

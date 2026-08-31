@@ -15,31 +15,44 @@ class AuthentikService:
         self.client_secret = client_secret or settings.AUTHENTIK_CLIENT_SECRET
         self._oidc_config: Optional[Dict[str, Any]] = None
 
+    def _get_base_url(self) -> str:
+        parsed = urllib.parse.urlparse(self.issuer_url)
+        return f"{parsed.scheme}://{parsed.netloc}"
+
     async def get_oidc_config(self) -> Dict[str, Any]:
         if self._oidc_config:
             return self._oidc_config
 
-        discovery_url = f"{self.issuer_url}/.well-known/openid-configuration"
-        try:
-            async with httpx.AsyncClient(timeout=8.0) as client:
-                res = await client.get(discovery_url)
-                if res.status_code == 200:
-                    self._oidc_config = res.json()
-                    return self._oidc_config
-        except Exception as e:
-            print(f"OIDC discovery failed, using fallback URLs: {e}")
+        base_url = self._get_base_url()
+        
+        # Try both the full issuer discovery and the root discovery
+        discovery_urls = [
+            f"{self.issuer_url}/.well-known/openid-configuration",
+            f"{base_url}/.well-known/openid-configuration"
+        ]
 
-        # Fallback to standard endpoints
+        for url in discovery_urls:
+            try:
+                async with httpx.AsyncClient(timeout=8.0, verify=False) as client:
+                    res = await client.get(url)
+                    if res.status_code == 200:
+                        self._oidc_config = res.json()
+                        return self._oidc_config
+            except Exception as e:
+                print(f"OIDC discovery at {url} failed: {e}")
+
+        # Correct Authentik standard fallback endpoints based on root domain
         self._oidc_config = {
-            "authorization_endpoint": f"{self.issuer_url}/application/o/authorize/",
-            "token_endpoint": f"{self.issuer_url}/application/o/token/",
-            "userinfo_endpoint": f"{self.issuer_url}/application/o/userinfo/"
+            "authorization_endpoint": f"{base_url}/application/o/authorize/",
+            "token_endpoint": f"{base_url}/application/o/token/",
+            "userinfo_endpoint": f"{base_url}/application/o/userinfo/"
         }
         return self._oidc_config
 
     async def build_authorization_url(self, redirect_uri: str, state: str) -> str:
         config = await self.get_oidc_config()
-        auth_endpoint = config.get("authorization_endpoint", f"{self.issuer_url}/application/o/authorize/")
+        base_url = self._get_base_url()
+        auth_endpoint = config.get("authorization_endpoint", f"{base_url}/application/o/authorize/")
 
         params = {
             "client_id": self.client_id,
@@ -54,8 +67,9 @@ class AuthentikService:
 
     async def exchange_code_for_user(self, code: str, redirect_uri: str) -> Dict[str, Any]:
         config = await self.get_oidc_config()
-        token_endpoint = config.get("token_endpoint", f"{self.issuer_url}/application/o/token/")
-        userinfo_endpoint = config.get("userinfo_endpoint", f"{self.issuer_url}/application/o/userinfo/")
+        base_url = self._get_base_url()
+        token_endpoint = config.get("token_endpoint", f"{base_url}/application/o/token/")
+        userinfo_endpoint = config.get("userinfo_endpoint", f"{base_url}/application/o/userinfo/")
 
         # 1. Exchange code for access token
         data = {
@@ -66,7 +80,7 @@ class AuthentikService:
             "redirect_uri": redirect_uri
         }
 
-        async with httpx.AsyncClient(timeout=10.0) as client:
+        async with httpx.AsyncClient(timeout=10.0, verify=False) as client:
             token_res = await client.post(token_endpoint, data=data)
             token_res.raise_for_status()
             token_data = token_res.json()
