@@ -7,16 +7,21 @@ import {
   VibeType 
 } from './types';
 import { api } from './services/api';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { Navbar } from './components/Navbar';
 import { TodayView } from './components/TodayView';
 import { ClosetView } from './components/ClosetView';
 import { HistoryView } from './components/HistoryView';
 import { UploadModal } from './components/UploadModal';
+import { AuthModal } from './components/AuthModal';
 
-export const App: React.FC = () => {
+const MainApp: React.FC = () => {
+  const { user } = useAuth();
+
   const [activeTab, setActiveTab] = useState<'today' | 'closet' | 'history'>('today');
   const [items, setItems] = useState<ClothingItem[]>([]);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   const [seeding, setSeeding] = useState(false);
 
   // Weather state
@@ -37,14 +42,14 @@ export const App: React.FC = () => {
   const [historyLoading, setHistoryLoading] = useState(false);
 
   // Fetch Wardrobe Items
-  const loadItems = async () => {
+  const loadItems = useCallback(async () => {
     try {
       const data = await api.getItems();
       setItems(data);
     } catch (err) {
       console.error('Kleidung konnte nicht geladen werden', err);
     }
-  };
+  }, []);
 
   // Fetch Weather Forecast
   const loadWeather = useCallback(async (lat = coords.lat, lon = coords.lon, city = coords.city) => {
@@ -103,10 +108,17 @@ export const App: React.FC = () => {
     }
   };
 
-  // Initial load & Geolocation
+  // Reload wardrobe on user login/logout
   useEffect(() => {
     loadItems();
+    setOutfit(null);
+    if (activeTab === 'history') {
+      loadHistory();
+    }
+  }, [user, loadItems, activeTab]);
 
+  // Initial load & Geolocation
+  useEffect(() => {
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
@@ -132,12 +144,6 @@ export const App: React.FC = () => {
       loadOutfit(weather);
     }
   }, [weather, items, outfit, loadOutfit]);
-
-  useEffect(() => {
-    if (activeTab === 'history') {
-      loadHistory();
-    }
-  }, [activeTab]);
 
   const handleSelectCity = (lat: number, lon: number, cityName: string) => {
     const newCoords = { lat, lon, city: cityName };
@@ -199,6 +205,7 @@ export const App: React.FC = () => {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onOpenUpload={() => setUploadModalOpen(true)}
+        onOpenAuth={() => setAuthModalOpen(true)}
         itemsCount={items.length}
       />
 
@@ -248,11 +255,25 @@ export const App: React.FC = () => {
         onItemAdded={handleItemAdded}
       />
 
+      {/* Authentication Modal */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+      />
+
       {/* Footer */}
       <footer className="border-t border-slate-200/80 bg-white/50 backdrop-blur-xs py-6 mt-12 text-center text-xs text-slate-500 font-medium">
         <p>FitCast • Angetrieben von Open-Meteo & Gemini Multimodal KI</p>
       </footer>
 
     </div>
+  );
+};
+
+export const App: React.FC = () => {
+  return (
+    <AuthProvider>
+      <MainApp />
+    </AuthProvider>
   );
 };

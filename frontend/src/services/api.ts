@@ -1,21 +1,82 @@
-import {
-  ClothingItem,
-  WeatherData,
-  CitySearchResult,
-  OutfitRecommendation,
+import { 
+  ClothingItem, 
+  WeatherData, 
+  CitySearchResult, 
+  OutfitRecommendation, 
   OutfitHistoryItem,
-  CategoryType,
-  VibeType
+  User,
+  ProvidersResponse
 } from '../types';
 
 const API_BASE = '/api';
 
 export const api = {
-  // Items
-  async getItems(category?: CategoryType): Promise<ClothingItem[]> {
+  // Auth
+  async register(data: { email: string; username: string; password: string }): Promise<User> {
+    const res = await fetch(`${API_BASE}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+      credentials: 'include',
+    });
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({ detail: 'Registrierung fehlgeschlagen' }));
+      throw new Error(error.detail || 'Registrierung fehlgeschlagen');
+    }
+    return res.json();
+  },
+
+  async login(data: { email: string; password: string }): Promise<User> {
+    const res = await fetch(`${API_BASE}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+      credentials: 'include',
+    });
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({ detail: 'Ungültige Anmeldedaten' }));
+      throw new Error(error.detail || 'Ungültige Anmeldedaten');
+    }
+    return res.json();
+  },
+
+  async logout(): Promise<void> {
+    await fetch(`${API_BASE}/auth/logout`, {
+      method: 'POST',
+      credentials: 'include',
+    });
+  },
+
+  async getMe(): Promise<User | null> {
+    try {
+      const res = await fetch(`${API_BASE}/auth/me`, {
+        credentials: 'include',
+      });
+      if (res.status === 401) return null;
+      if (!res.ok) return null;
+      return res.json();
+    } catch {
+      return null;
+    }
+  },
+
+  async getProviders(): Promise<ProvidersResponse> {
+    try {
+      const res = await fetch(`${API_BASE}/auth/providers`, {
+        credentials: 'include',
+      });
+      if (!res.ok) return { authentik_enabled: false };
+      return res.json();
+    } catch {
+      return { authentik_enabled: false };
+    }
+  },
+
+  // Wardrobe Items
+  async getItems(category?: string): Promise<ClothingItem[]> {
     const url = category ? `${API_BASE}/items?category=${category}` : `${API_BASE}/items`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('Failed to fetch wardrobe items');
+    const res = await fetch(url, { credentials: 'include' });
+    if (!res.ok) throw new Error('Kleidung konnte nicht geladen werden');
     return res.json();
   },
 
@@ -23,17 +84,18 @@ export const api = {
     const res = await fetch(`${API_BASE}/items`, {
       method: 'POST',
       body: formData,
+      credentials: 'include',
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({ detail: 'Upload failed' }));
-      throw new Error(err.detail || 'Failed to upload item');
-    }
+    if (!res.ok) throw new Error('Kleidungsstück konnte nicht hochgeladen werden');
     return res.json();
   },
 
   async deleteItem(id: number): Promise<void> {
-    const res = await fetch(`${API_BASE}/items/${id}`, { method: 'DELETE' });
-    if (!res.ok) throw new Error('Failed to delete item');
+    const res = await fetch(`${API_BASE}/items/${id}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+    if (!res.ok) throw new Error('Kleidungsstück konnte nicht gelöscht werden');
   },
 
   async analyzePhoto(file: File): Promise<Partial<ClothingItem>> {
@@ -42,35 +104,39 @@ export const api = {
     const res = await fetch(`${API_BASE}/items/analyze`, {
       method: 'POST',
       body: formData,
+      credentials: 'include',
     });
-    if (!res.ok) throw new Error('Failed to analyze photo');
+    if (!res.ok) throw new Error('Fotoanalyse fehlgeschlagen');
     return res.json();
   },
 
-  async seedSampleWardrobe(): Promise<{ message: string; count: number }> {
-    const res = await fetch(`${API_BASE}/items/seed-sample-wardrobe`, { method: 'POST' });
-    if (!res.ok) throw new Error('Failed to seed sample wardrobe');
+  async seedSampleWardrobe(): Promise<{ count: number }> {
+    const res = await fetch(`${API_BASE}/items/seed-sample-wardrobe`, {
+      method: 'POST',
+      credentials: 'include',
+    });
+    if (!res.ok) throw new Error('Beispiel-Garderobe konnte nicht geladen werden');
     return res.json();
   },
 
   // Weather
   async getCurrentWeather(lat: number, lon: number, city?: string): Promise<WeatherData> {
-    const cityParam = city ? `&city=${encodeURIComponent(city)}` : '';
-    const res = await fetch(`${API_BASE}/weather/current?lat=${lat}&lon=${lon}${cityParam}`);
-    if (!res.ok) throw new Error('Failed to load weather data');
+    const url = `${API_BASE}/weather/current?lat=${lat}&lon=${lon}${city ? `&city=${encodeURIComponent(city)}` : ''}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Wetterdaten konnten nicht geladen werden');
     return res.json();
   },
 
   async searchCity(query: string): Promise<CitySearchResult[]> {
     const res = await fetch(`${API_BASE}/weather/search?q=${encodeURIComponent(query)}`);
-    if (!res.ok) throw new Error('Failed to search locations');
+    if (!res.ok) throw new Error('Stadtsuche fehlgeschlagen');
     return res.json();
   },
 
-  // Outfit
+  // Outfit Recommendations & History
   async recommendOutfit(params: {
     weather: WeatherData;
-    vibe?: VibeType;
+    vibe?: string;
     locked_top_id?: number | null;
     locked_pants_id?: number | null;
     locked_shoes_id?: number | null;
@@ -79,10 +145,11 @@ export const api = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(params),
+      credentials: 'include',
     });
     if (!res.ok) {
-      const err = await res.json().catch(() => ({ detail: 'Failed to generate outfit' }));
-      throw new Error(err.detail || 'Failed to generate outfit recommendation');
+      const err = await res.json().catch(() => ({ detail: 'Outfit-Empfehlung fehlgeschlagen' }));
+      throw new Error(err.detail || 'Outfit-Empfehlung fehlgeschlagen');
     }
     return res.json();
   },
@@ -94,22 +161,28 @@ export const api = {
     weather: WeatherData;
     ai_explanation: string;
     vibe?: string;
-  }): Promise<void> {
-    const url = new URL(`${window.location.origin}${API_BASE}/outfit/wear`);
-    url.searchParams.set('top_id', String(params.top_id));
-    url.searchParams.set('pants_id', String(params.pants_id));
-    url.searchParams.set('shoes_id', String(params.shoes_id));
-    url.searchParams.set('weather_json', JSON.stringify(params.weather));
-    url.searchParams.set('ai_explanation', params.ai_explanation);
-    url.searchParams.set('vibe', params.vibe || 'casual');
-
-    const res = await fetch(url.toString(), { method: 'POST' });
-    if (!res.ok) throw new Error('Failed to log outfit');
+  }): Promise<{ id: number }> {
+    const query = new URLSearchParams({
+      top_id: String(params.top_id),
+      pants_id: String(params.pants_id),
+      shoes_id: String(params.shoes_id),
+      weather_json: JSON.stringify(params.weather),
+      ai_explanation: params.ai_explanation,
+      vibe: params.vibe || 'casual',
+    });
+    const res = await fetch(`${API_BASE}/outfit/wear?${query.toString()}`, {
+      method: 'POST',
+      credentials: 'include',
+    });
+    if (!res.ok) throw new Error('Outfit-Verlauf konnte nicht gespeichert werden');
+    return res.json();
   },
 
   async getHistory(): Promise<OutfitHistoryItem[]> {
-    const res = await fetch(`${API_BASE}/outfit/history`);
-    if (!res.ok) throw new Error('Failed to fetch outfit history');
+    const res = await fetch(`${API_BASE}/outfit/history`, {
+      credentials: 'include',
+    });
+    if (!res.ok) throw new Error('Verlauf konnte nicht geladen werden');
     return res.json();
-  }
+  },
 };

@@ -1,7 +1,22 @@
 export type CategoryType = 'top' | 'pants' | 'shoes';
 
+export interface User {
+  id: number;
+  email: string;
+  username: string;
+  auth_provider: string;
+  avatar_url?: string | null;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface ProvidersResponse {
+  authentik_enabled: boolean;
+}
+
 export interface ClothingItem {
   id: number;
+  user_id?: number | null;
   category: CategoryType;
   name: string;
   image_url: string;
