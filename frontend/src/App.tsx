@@ -39,6 +39,7 @@ const MainApp: React.FC = () => {
   const [outfit, setOutfit] = useState<OutfitRecommendation | null>(null);
   const [outfitLoading, setOutfitLoading] = useState(false);
   const initialOutfitLoadedRef = useRef(false);
+  const geolocationInitializedRef = useRef(false);
 
   // History state
   const [history, setHistory] = useState<OutfitHistoryItem[]>([]);
@@ -64,8 +65,8 @@ const MainApp: React.FC = () => {
     }
   }, []);
 
-  // Fetch Weather Forecast
-  const loadWeather = useCallback(async (lat = coords.lat, lon = coords.lon, city = coords.city) => {
+  // Fetch Weather Forecast (Fixed: zero state dependencies)
+  const loadWeather = useCallback(async (lat: number, lon: number, city?: string) => {
     try {
       setWeatherLoading(true);
       const data = await api.getCurrentWeather(lat, lon, city);
@@ -75,7 +76,7 @@ const MainApp: React.FC = () => {
     } finally {
       setWeatherLoading(false);
     }
-  }, [coords]);
+  }, []);
 
   // Request Outfit Recommendation
   const loadOutfit = useCallback(async (
@@ -136,22 +137,24 @@ const MainApp: React.FC = () => {
     }
   }, [activeTab, loadHistory]);
 
-  // Initial load & Geolocation
+  // Initial load & Geolocation (guarded with ref against infinite loops)
   useEffect(() => {
+    if (geolocationInitializedRef.current) return;
+    geolocationInitializedRef.current = true;
+
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
-          const newCoords = {
-            lat: pos.coords.latitude,
-            lon: pos.coords.longitude,
-            city: 'Aktueller Standort'
-          };
-          setCoords(newCoords);
-          loadWeather(newCoords.lat, newCoords.lon, newCoords.city);
+          const lat = pos.coords.latitude;
+          const lon = pos.coords.longitude;
+          const city = 'Aktueller Standort';
+          setCoords({ lat, lon, city });
+          loadWeather(lat, lon, city);
         },
         () => {
           loadWeather(52.52, 13.405, 'Berlin');
-        }
+        },
+        { timeout: 5000 }
       );
     } else {
       loadWeather(52.52, 13.405, 'Berlin');
@@ -259,7 +262,7 @@ const MainApp: React.FC = () => {
           <TodayView
             weather={weather}
             weatherLoading={weatherLoading}
-            onRefreshWeather={() => loadWeather()}
+            onRefreshWeather={() => loadWeather(coords.lat, coords.lon, coords.city)}
             onSelectCity={handleSelectCity}
             outfit={outfit}
             outfitLoading={outfitLoading}
