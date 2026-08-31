@@ -1,5 +1,7 @@
+import secrets
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import User
@@ -11,6 +13,7 @@ from app.services.auth_service import (
     create_access_token,
     decode_access_token
 )
+from app.services.authentik_service import authentik_service
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -60,7 +63,7 @@ def set_auth_cookie(response: Response, user_id: int, email: str):
         httponly=True,
         max_age=settings.ACCESS_TOKEN_EXPIRE_DAYS * 24 * 3600,
         samesite="lax",
-        secure=False,  # Set to True in HTTPS production environments
+        secure=False,
         path="/"
     )
 
@@ -117,3 +120,86 @@ def get_me(current_user: User = Depends(get_current_user)):
 @router.get("/providers", response_model=ProvidersResponse)
 def get_auth_providers():
     return ProvidersResponse(authentik_enabled=settings.authentik_enabled)
+
+# ============================
+# Authentik OIDC SSO Endpoints
+# ============================
+@router.get("/authentik/login")
+async def authentik_login(request: Request, response: Response):
+    if not settings.authentik_enabled:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Authentik ist auf diesem Server nicht konfiguriert."
+        )
+
+    state = secrets.token_urlsafe(32)
+    redirect_uri = settings.AUTHENTIK_REDIRECT_URI or str(request.url_for("authentik_callback"))
+    auth_url = await authentik_service.build_authorization_url(redirect_uri=redirect_uri, state=state)
+
+    resp = RedirectResponse(url=auth_url, status_code=status.HTTP_302_FOUND)
+    resp.set_cookie(
+        key="fitcast_oauth_state",
+        value=state,
+        httponly=True,
+        max_age=600,
+        samesite="lax",
+        path="/"
+    )
+    return resp
+
+@router.get("/authentik/callback", name="authentik_callback")
+async def authentik_callback(
+    request: Request,
+    response: Response,
+    code: Optional[str] = None,
+    state: Optional[str] = None,
+    error: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    if error or not code:
+        return RedirectResponse(url="/?auth_error=" + (error or "missing_code"), status_code=status.HTTP_302_FOUND)
+
+    expected_state = request.cookies.get("fitcast_oauth_state")
+    if not expected_state or expected_state != state:
+        return RedirectResponse(url="/?auth_error=invalid_state", status_code=status.HTTP_302_FOUND)
+
+    redirect_uri = settings.AUTHENTIK_REDIRECT_URI or str(request.url_for("authentik_callback"))
+
+    try:
+        user_info = await authentik_service.exchange_code_for_user(code=code, redirect_uri=redirect_uri)
+    except Exception as e:
+        print(f"Authentik exchange failed: {e}")
+        return RedirectResponse(url="/?auth_error=exchange_failed", status_code=status.HTTP_302_FOUND)
+
+    sub = user_info["sub"]
+    email = user_info["email"].lower()
+    name = user_info["name"]
+    avatar = user_info.get("avatar")
+
+    # Find or create user
+    user = db.query(User).filter((User.authentik_sub == sub) | (User.email == email)).first()
+    if not user:
+        user = User(
+            email=email,
+            username=name,
+            auth_provider="authentik",
+            authentik_sub=sub,
+            avatar_url=avatar,
+            is_active=True
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+    else:
+        if not user.authentik_sub:
+            user.authentik_sub = sub
+            user.auth_provider = "authentik"
+        if avatar and not user.avatar_url:
+            user.avatar_url = avatar
+        db.commit()
+        db.refresh(user)
+
+    redirect_resp = RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
+    set_auth_cookie(redirect_resp, user.id, user.email)
+    redirect_resp.delete_cookie(key="fitcast_oauth_state", path="/")
+    return redirect_resp
