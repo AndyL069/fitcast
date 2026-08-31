@@ -6,7 +6,7 @@ services:
     container_name: fitcast-app
     restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "3004:8000"
     environment:
       - SECRET_KEY=${SECRET_KEY:-fitcast-super-secret-key-development-mode-2026}
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}

@@ -5,7 +5,7 @@ services:
     container_name: fitcast-app
     restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "3004:8000"
     environment:
       # Sicherheit (erforderlich)
       - SECRET_KEY=${SECRET_KEY:-fitcast-super-secret-key-change-in-production}

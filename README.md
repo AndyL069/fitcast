@@ -34,12 +34,12 @@ services:
     container_name: fitcast-app
     restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "3004:8000"
     environment:
       - SECRET_KEY=ein-sehr-geheimer-schluessel-12345
       
       # Optional: Gemini KI-Vision
-      - GEMINI_API_KEY=dein-gemini-api-key
+      - GEMINI_API_KEY=
       
       # Optional: Authentik SSO
       - AUTHENTIK_CLIENT_ID=fitcast
@@ -56,7 +56,7 @@ volumes:
 ```
 
 4. Click **Deploy the stack**.
-5. Open **http://<your-server-ip>:8000** in your browser.
+5. Open **http://<your-server-ip>:3004** in your browser.
 
 ---
 
@@ -68,7 +68,7 @@ Run the entire full-stack application (frontend + backend + database) in a singl
 docker compose up -d --build
 ```
 
-Then open **http://localhost:8000** in your browser.
+Then open **http://localhost:3004** in your browser.
 
 ---
 
@@ -88,7 +88,7 @@ SECRET_KEY="dein-sicherer-geheimer-schluessel"
 AUTHENTIK_CLIENT_ID="fitcast-client-id"
 AUTHENTIK_CLIENT_SECRET="fitcast-client-secret"
 AUTHENTIK_ISSUER_URL="https://authentik.company.local/application/o/fitcast/"
-AUTHENTIK_REDIRECT_URI="http://localhost:8000/api/auth/authentik/callback"
+AUTHENTIK_REDIRECT_URI="http://localhost:3004/api/auth/authentik/callback"
 ```
 
 ---
