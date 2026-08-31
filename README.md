@@ -19,7 +19,48 @@ FitCast is an AI-powered personal stylist and digital wardrobe web application. 
 
 ---
 
-## 🐳 Docker Deployment (Recommended)
+## 🚢 Portainer Stack Deployment (via GHCR Image)
+
+You can run FitCast directly in **Portainer** using the pre-built image from GitHub Container Registry:
+
+1. In Portainer, go to **Stacks** ➔ **Add stack**.
+2. Name the stack (e.g. `fitcast`).
+3. Paste the following compose definition:
+
+```yaml
+services:
+  fitcast:
+    image: ghcr.io/andyl069/fitcast:latest
+    container_name: fitcast-app
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - SECRET_KEY=ein-sehr-geheimer-schluessel-12345
+      
+      # Optional: Gemini KI-Vision
+      - GEMINI_API_KEY=dein-gemini-api-key
+      
+      # Optional: Authentik SSO
+      - AUTHENTIK_CLIENT_ID=fitcast
+      - AUTHENTIK_CLIENT_SECRET=dein-authentik-secret
+      - AUTHENTIK_ISSUER_URL=https://authentik.deinedomain.de/application/o/fitcast/
+      - AUTHENTIK_REDIRECT_URI=https://fitcast.deinedomain.de/api/auth/authentik/callback
+    volumes:
+      - fitcast_uploads:/app/uploads
+      - fitcast_data:/app/data
+
+volumes:
+  fitcast_uploads:
+  fitcast_data:
+```
+
+4. Click **Deploy the stack**.
+5. Open **http://<your-server-ip>:8000** in your browser.
+
+---
+
+## 🐳 Docker Deployment (Local Build)
 
 Run the entire full-stack application (frontend + backend + database) in a single command using Docker Compose:
 
@@ -29,10 +70,6 @@ docker compose up -d --build
 
 Then open **http://localhost:8000** in your browser.
 
-- **Stop container:** `docker compose down`
-- **View logs:** `docker compose logs -f`
-- **Data Persistence:** Uploaded photos (`./backend/uploads`) and SQLite database (`fitcast_data` volume) are persisted across restarts.
-
 ---
 
 ## 🔑 Authentication & Authentik Configuration
@@ -41,7 +78,7 @@ Then open **http://localhost:8000** in your browser.
 Works out-of-the-box with no configuration required.
 
 ### Authentik OIDC SSO (Optional):
-To enable the **"Mit Authentik anmelden"** button, set the following environment variables in `docker-compose.yml` or your `.env` file:
+To enable the **"Mit Authentik anmelden"** button, set the following environment variables:
 
 ```bash
 # JWT Secret Key
@@ -94,12 +131,3 @@ cd backend
 $env:PYTHONPATH="."
 .\venv\Scripts\pytest.exe tests/ -v
 ```
-
----
-
-## 🔑 Optional AI Configuration
-To enable live Gemini Multimodal Vision photo scanning, set your Gemini API key in `backend/.env` or as an environment variable:
-```bash
-GEMINI_API_KEY="your-gemini-api-key"
-```
-*(If unset, FitCast will automatically use its built-in rule-based color harmony & thermal matching engine.)*
