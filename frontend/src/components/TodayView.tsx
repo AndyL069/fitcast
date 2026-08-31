@@ -97,12 +97,12 @@ export const TodayView: React.FC<TodayViewProps> = ({
     if (!newValue) {
       setLockedJacket(false);
     }
-    // Re-recommend with jacket toggled
+    // Keep current 3 pieces (top, pants, shoes) and add/remove the 4th piece (jacket)
     onRecommendOutfit(
       selectedVibe,
-      lockedTop && outfit ? outfit.top.id : null,
-      lockedPants && outfit ? outfit.pants.id : null,
-      lockedShoes && outfit ? outfit.shoes.id : null,
+      outfit ? outfit.top.id : null,
+      outfit ? outfit.pants.id : null,
+      outfit ? outfit.shoes.id : null,
       null, // reset locked jacket when toggling
       newValue
     );

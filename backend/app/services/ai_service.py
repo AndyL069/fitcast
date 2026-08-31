@@ -56,11 +56,9 @@ def algorithmic_outfit_matching(
     if not cand_pants: cand_pants = pants
     if not cand_shoes: cand_shoes = shoes
 
-    # Jacket selection logic: recommended when chilly, rainy, snowy or explicitly locked
-    needs_jacket = (weather.comfort_target >= 3 or weather.temperature < 19.0 or weather.is_rainy or weather.is_snowy or locked_jacket_id is not None)
+    # Jacket selection logic: if jackets list is provided, pick the best matching jacket
     sel_jacket = None
-
-    if jackets and len(jackets) > 0 and needs_jacket:
+    if jackets and len(jackets) > 0:
         cand_jackets = [j for j in jackets if j.id == locked_jacket_id] if locked_jacket_id else jackets
         if not cand_jackets: cand_jackets = jackets
         # Score jackets based on warmth & rain resistance
@@ -261,6 +259,13 @@ async def generate_outfit_with_ai(
             shoes_catalog = [{"id": s.id, "name": s.name, "color": s.color, "warmth": s.warmth_level, "formality": s.formality, "waterproof": s.waterproof} for s in shoes]
             jackets_catalog = [{"id": j.id, "name": j.name, "color": j.color, "warmth": j.warmth_level, "formality": j.formality, "waterproof": j.waterproof} for j in (jackets or [])]
 
+            has_jackets = bool(jackets and len(jackets) > 0)
+            jacket_rule = (
+                "Wähle 1 Oberteil, 1 Hose, 1 Paar Schuhe und 1 Jacke aus (der Nutzer möchte ausdrücklich eine Jacke zu diesem Outfit)."
+                if has_jackets
+                else "Wähle 1 Oberteil, 1 Hose und 1 Paar Schuhe aus (keine Jacke auswählen)."
+            )
+
             prompt = f"""Du bist ein professioneller Personal Stylist.
 Aktuelle Wettervorhersage:
 - Ort: {weather.city}
@@ -278,13 +283,13 @@ Festgesetzte Hose ID: {locked_pants_id}
 Festgesetzte Schuhe ID: {locked_shoes_id}
 Festgesetzte Jacke ID: {locked_jacket_id}
 
-Wähle die beste Kombination aus (1 Oberteil, 1 Hose, 1 Paar Schuhe und optional 1 Jacke, falls das Wetter kühl/regnerisch ist oder eine Jacke festgesetzt wurde).
+{jacket_rule}
 Antworte auf DEUTSCH mit einem JSON-Objekt in diesem Schema:
 {{
   "top_id": <int>,
   "pants_id": <int>,
   "shoes_id": <int>,
-  "jacket_id": <int oder null, falls keine Jacke benötigt wird>,
+  "jacket_id": <int aus den verfügbaren Jacken, oder null falls keine Jacken verfügbar sind>,
   "explanation": "<2-3 ansprechende Sätze auf Deutsch, warum dieses Outfit modisch ist und perfekt zum heutigen Wetter passt>",
   "styling_tips": ["<Tipp 1 auf Deutsch>", "<Tipp 2 auf Deutsch>"],
   "weather_fit_score": <int zwischen 80 und 99>
