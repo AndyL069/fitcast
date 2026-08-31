@@ -72,7 +72,7 @@ def get_redirect_uri(request: Request) -> str:
         return settings.AUTHENTIK_REDIRECT_URI
     proto = request.headers.get("x-forwarded-proto", request.url.scheme)
     host = request.headers.get("x-forwarded-host", request.headers.get("host"))
-    return f"{proto}://{host}/api/auth/authentik/callback"
+    return f"{proto}://{host}/api/auth/callback/authentik"
 
 @router.post("/register", response_model=UserResponse)
 def register_user(payload: UserCreate, response: Response, db: Session = Depends(get_db)):
@@ -154,7 +154,9 @@ async def authentik_login(request: Request, response: Response):
     )
     return resp
 
+# Support both /authentik/callback and /callback/authentik formats
 @router.get("/authentik/callback", name="authentik_callback")
+@router.get("/callback/authentik", name="authentik_callback_alt")
 async def authentik_callback(
     request: Request,
     response: Response,
