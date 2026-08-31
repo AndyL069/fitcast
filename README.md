@@ -49,7 +49,6 @@ services:
       AUTHENTIK_CLIENT_ID: ${AUTHENTIK_CLIENT_ID}
       AUTHENTIK_CLIENT_SECRET: ${AUTHENTIK_CLIENT_SECRET}
       AUTHENTIK_ISSUER: ${AUTHENTIK_ISSUER}
-      AUTHENTIK_REDIRECT_URI: ${AUTHENTIK_REDIRECT_URI}
       
       # Pfade
       UPLOADS_DIR: /app/uploads
@@ -69,7 +68,6 @@ volumes:
    - `AUTHENTIK_CLIENT_ID` ➔ `fitcast`
    - `AUTHENTIK_CLIENT_SECRET` ➔ `dein-authentik-secret`
    - `AUTHENTIK_ISSUER` ➔ `https://authentik.deinedomain.de/application/o/fitcast/`
-   - `AUTHENTIK_REDIRECT_URI` ➔ `https://fitcast.deinedomain.de/api/auth/authentik/callback`
    - `GEMINI_API_KEY` *(optional)*
 5. Klicke auf **Deploy the stack**.
 6. Öffne **http://<your-server-ip>:3004** in deinem Browser.

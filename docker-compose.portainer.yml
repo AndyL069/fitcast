@@ -11,17 +11,15 @@ services:
       SECRET_KEY: ${SECRET_KEY:-fitcast-super-secret-key-change-in-production}
       
       # Datenbank: PostgreSQL oder SQLite
-      # Beispiel PostgreSQL: postgresql://user:password@postgres-host:5432/fitcast
       DATABASE_URL: ${DATABASE_URL:-sqlite:////app/data/fitcast.db}
       
       # Optional: KI-Vision Bilderkennung
       GEMINI_API_KEY: ${GEMINI_API_KEY}
       
-      # Optional: Authentik OIDC SSO
+      # Optional: Authentik OIDC SSO (Genau wie bei deinen anderen Apps)
       AUTHENTIK_CLIENT_ID: ${AUTHENTIK_CLIENT_ID}
       AUTHENTIK_CLIENT_SECRET: ${AUTHENTIK_CLIENT_SECRET}
       AUTHENTIK_ISSUER: ${AUTHENTIK_ISSUER}
-      AUTHENTIK_REDIRECT_URI: ${AUTHENTIK_REDIRECT_URI}
       
       # Anwendungs-Pfade
       UPLOADS_DIR: /app/uploads
