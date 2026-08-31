@@ -1,33 +1,31 @@
-# FitCast — Weather-Aware Outfit Picker 🌦️👕👖👟
+# Clueless — AI Wardrobe & Outfit Picker 💅✨👗
 
-FitCast is an AI-powered personal stylist and digital wardrobe web application. You upload photos of your tops, pants, and shoes. FitCast analyzes their colors, fabrics, warmth ratings, and formality using **Gemini Multimodal Vision AI**, checks your real-time local weather forecast via **Open-Meteo**, and dynamically generates the optimal outfit combination for the day.
+*„Let's see what Cher would wear today!“* 
+
+**Clueless** ist dein persönlicher KI-Stylist und digitaler Kleiderschrank – inspiriert von Cher Horowitz' legendärem Kleiderschrank-Computer aus dem 90er-Kultfilm *Clueless*. Du lädst Fotos deiner Oberteile, Hosen und Schuhe hoch. Clueless analysiert Farben, Stoffe, Wärmegrade und Formalität mit **Gemini Multimodal Vision KI**, prüft die lokale Wettervorhersage via **Open-Meteo** und generiert dynamisch das perfekte Outfit für jeden Tag.
 
 ---
 
 ## ✨ Key Features
-- 👥 **Multi-User Management & Isolation:** Individual user accounts with private wardrobe galleries and distinct outfit histories.
-- 🐘 **PostgreSQL 16 Database Stack:** Dedicated PostgreSQL database container with automatic health checks and connection pooling.
-- 🤖 **Flexible Gemini Model Support:** Uses `gemini-2.5-flash` by default with support for any model via `GEMINI_MODEL` (e.g. `gemini-2.5-pro`, `gemini-1.5-flash`).
-- 🔐 **Secure Authentication:** Local email/password registration with salted bcrypt hashing and JWT tokens transmitted via `HttpOnly` secure cookies.
-- 🛡️ **Authentik SSO (OIDC):** Single Sign-On with Authentik OpenID Connect (OIDC) when configured via environment variables.
-- 📸 **Photo Upload & Multimodal Auto-Tagging:** Drop in photos of your tops, pants, or shoes. Gemini Vision automatically detects the item category, primary/secondary colors, fabric type, estimated warmth level (1–5), and rain resistance.
-- ☀️ **Real-Time Weather Comfort Scoring:** Sourced automatically via browser geolocation or global city search with Open-Meteo. Maps temperatures and precipitation into target warmth ratings and rain protection needs.
-- 🎯 **Daily Outfit Hero Canvas:** Visualizes the recommended top, bottom, and shoes in a clean layout with an AI Stylist explanation note and styling tips.
-- 🔒 **Lock & Shuffle Controls:** Love a specific sweater today? Lock it in place with one click and shuffle matching pants and footwear.
-- 🎨 **Style & Vibe Filtering:** Switch vibes dynamically between *Casual*, *Smart Casual*, *Formal*, or *Any*.
-- 🗄️ **Digital Closet Management:** Categorized tabs (Tops, Pants, Shoes), filter search, item counts, and quick delete.
-- 📖 **Outfit History Tracker:** Track what you wore and the weather conditions on previous days.
-- ⚡ **Zero-Config Resilient:** Includes a deterministic color harmony and thermal matching fallback engine that works 100% offline even without an external API key.
+- 👥 **Multi-User Management & Isolation:** Individuelle Benutzerkonten mit privaten Kleiderschränken und getrennten Outfit-Verläufen.
+- 🐘 **PostgreSQL 16 Database Stack:** Dedizierter PostgreSQL-Datenbank-Container mit Healthchecks und Connection Pooling.
+- 🤖 **Flexible Gemini Model Support:** Verwendet standardmäßig `gemini-2.5-flash` im optimierten Low-Latency-Modus für blitzschnelle Antworten.
+- 🔐 **Sichere Authentifizierung:** Lokale Registrierung/Anmeldung mit `bcrypt` + `HttpOnly` JWT-Cookies.
+- 🛡️ **Authentik SSO (OIDC):** Nahtloses Single Sign-On mit Authentik.
+- 📸 **Foto-Upload & Multimodal Auto-Tagging:** Automatische Erkennung von Kategorie, Farbe, Schnitt, Wärmegrad und Regenschutz.
+- ☀️ **Echtzeit-Wetter-Komfort-Scoring:** Automatische Standort- und Wettererkennung mit Open-Meteo.
+- 🎯 **Daily Outfit Hero Canvas:** Visuelle Darstellung der perfekten Kombination aus Top, Hose und Schuhen mit Stylisten-Notiz.
+- 🔒 **Lock & Shuffle:** Fixiere dein Lieblingsteil (z.B. den gelben Karo-Blazer) und shuffele passende Hosen und Schuhe dazu.
+- 🎨 **Vibe & Anlass-Filter:** Wechsel flexibel zwischen *Freizeit*, *Smart Casual*, *Formell* oder *Alle*.
+- 🗄️ **Digitaler Kleiderschrank:** Schnelle Übersicht aller Teile, Filterung und Verwaltung.
+- 📖 **Outfit-Verlauf:** Behalte im Blick, was du an welchen Tagen getragen hast.
+- ⚡ **Zero-Config Resilient:** Deterministischer Offline-Farbharmonie- und Thermo-Algorithmus als zuverlässiger Fallback.
 
 ---
 
 ## 🚢 Portainer Stack Deployment (via GHCR Image)
 
-You can run FitCast directly in **Portainer** using the pre-built image from GitHub Container Registry with a dedicated PostgreSQL database:
-
-1. In Portainer, go to **Stacks** ➔ **Add stack**.
-2. Name the stack (e.g. `fitcast`).
-3. Paste the following compose definition:
+Du kannst Clueless direkt in **Portainer** über das GitHub Container Registry Image bereitstellen:
 
 ```yaml
 services:
@@ -54,17 +52,20 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    extra_hosts:
+      - "auth.am-homelab.de:192.168.178.117"
+      - "fitcast.am-homelab.de:192.168.178.117"
     ports:
       - "${PORT:-3004}:8000"
     environment:
-      SECRET_KEY: ${SECRET_KEY:-fitcast-super-secret-key-change-in-production}
+      SECRET_KEY: ${SECRET_KEY:-clueless-super-secret-key-change-in-production}
       DATABASE_URL: postgresql://fitcast:${POSTGRES_PASSWORD}@db:5432/fitcast
       
       # KI-Vision Bilderkennung & Styling
       GEMINI_API_KEY: ${GEMINI_API_KEY}
       GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
       
-      # Optional: Authentik SSO
+      # Authentik OIDC SSO
       AUTHENTIK_CLIENT_ID: ${AUTHENTIK_CLIENT_ID}
       AUTHENTIK_CLIENT_SECRET: ${AUTHENTIK_CLIENT_SECRET}
       AUTHENTIK_ISSUER: ${AUTHENTIK_ISSUER}
@@ -80,33 +81,18 @@ volumes:
   fitcast_db_data:
 ```
 
-4. Unter **Environment variables** in Portainer kannst du nun deine Variablen definieren:
-   - `POSTGRES_PASSWORD` ➔ `dein-sicheres-db-passwort`
-   - `SECRET_KEY` ➔ `dein-geheimer-schluessel`
-   - `AUTHENTIK_CLIENT_ID` ➔ `fitcast`
-   - `AUTHENTIK_CLIENT_SECRET` ➔ `dein-authentik-secret`
-   - `AUTHENTIK_ISSUER` ➔ `https://authentik.deinedomain.de/application/o/fitcast/`
-   - `GEMINI_API_KEY` *(optional)*
-   - `GEMINI_MODEL` *(optional, Standard: `gemini-2.5-flash`)*
-5. Klicke auf **Deploy the stack**.
-6. Öffne **http://<your-server-ip>:3004** in deinem Browser.
-
 ---
 
-## 🐳 Docker Deployment (Local Build)
-
-Run the entire full-stack application in a single command using Docker Compose:
+## 🐳 Lokales Deployment mit Docker
 
 ```bash
 docker compose up -d --build
 ```
-
-Then open **http://localhost:3004** in your browser.
+Dann im Browser öffnen: **http://localhost:3004**
 
 ---
 
-## 🧪 Running Automated Tests
-Run the backend test suite:
+## 🧪 Tests ausführen
 ```powershell
 cd backend
 $env:PYTHONPATH="."

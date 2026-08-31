@@ -11,8 +11,8 @@ from app.routes import items, weather, outfit, auth
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="FitCast API",
-    description="Weather-Aware Outfit Picker API",
+    title="Clueless API",
+    description="Cher Horowitz AI Wardrobe & Outfit Picker API",
     version="1.0.0"
 )
 
@@ -38,7 +38,7 @@ app.include_router(outfit.router)
 def health_check():
     return {
         "status": "healthy",
-        "service": "FitCast API",
+        "service": "Clueless API",
         "version": "1.0.0"
     }
 

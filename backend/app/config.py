@@ -23,7 +23,7 @@ if raw_db_url.startswith("postgres://"):
     raw_db_url = raw_db_url.replace("postgres://", "postgresql://", 1)
 
 class Settings:
-    PROJECT_NAME: str = "FitCast API"
+    PROJECT_NAME: str = "Clueless API"
     DATABASE_URL: str = raw_db_url
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
     GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")

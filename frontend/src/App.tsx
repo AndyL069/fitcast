@@ -307,7 +307,7 @@ const MainApp: React.FC = () => {
 
       {/* Footer */}
       <footer className="border-t border-slate-200/80 bg-white/50 backdrop-blur-xs py-6 mt-12 text-center text-xs text-slate-500 font-medium">
-        <p>FitCast • Angetrieben von Open-Meteo & Gemini Multimodal KI</p>
+        <p>Clueless • Angetrieben von Open-Meteo & Gemini Multimodal KI</p>
       </footer>
 
     </div>

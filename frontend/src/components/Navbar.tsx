@@ -43,7 +43,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
           <div>
             <span className="text-xl font-bold bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent">
-              FitCast
+              Clueless
             </span>
             <span className="hidden sm:inline-block ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-200">
               KI-Stylist

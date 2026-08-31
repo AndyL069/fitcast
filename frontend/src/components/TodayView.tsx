@@ -134,7 +134,7 @@ export const TodayView: React.FC<TodayViewProps> = ({
             Vervollständige deinen Kleiderschrank für Empfehlungen
           </h3>
           <p className="text-sm text-slate-500 max-w-md mx-auto mt-1.5 mb-6">
-            FitCast benötigt mindestens 1 Oberteil, 1 Hose und 1 Paar Schuhe, um passende Outfits zusammenzustellen.
+            Clueless benötigt mindestens 1 Oberteil, 1 Hose und 1 Paar Schuhe, um passende Outfits zusammenzustellen.
           </p>
 
           {/* Checklist */}
