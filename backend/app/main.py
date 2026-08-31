@@ -10,6 +10,18 @@ from app.routes import items, weather, outfit, auth
 # Create DB tables
 Base.metadata.create_all(bind=engine)
 
+# Auto-migrate: add jacket_id column to outfit_history if it doesn't exist yet
+# (create_all only creates new tables, it never ALTERs existing ones)
+from sqlalchemy import inspect, text
+inspector = inspect(engine)
+if "outfit_history" in inspector.get_table_names():
+    existing_cols = [c["name"] for c in inspector.get_columns("outfit_history")]
+    if "jacket_id" not in existing_cols:
+        with engine.begin() as conn:
+            conn.execute(text(
+                "ALTER TABLE outfit_history ADD COLUMN jacket_id INTEGER REFERENCES clothing_items(id)"
+            ))
+
 app = FastAPI(
     title="Clueless API",
     description="Cher Horowitz AI Wardrobe & Outfit Picker API",
