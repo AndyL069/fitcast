@@ -149,7 +149,7 @@ Gib ein valides JSON-Objekt auf Deutsch zurück:
 Antworte NUR mit reinem JSON ohne Markdown-Codeblöcke."""
 
             response = client.models.generate_content(
-                model="gemini-2.5-flash",
+                model=settings.GEMINI_MODEL,
                 contents=[
                     types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg"),
                     prompt
@@ -161,7 +161,7 @@ Antworte NUR mit reinem JSON ohne Markdown-Codeblöcke."""
             parsed = json.loads(text.strip())
             return parsed
         except Exception as e:
-            print(f"Gemini Vision API error: {e}")
+            print(f"Gemini Vision API error with model {settings.GEMINI_MODEL}: {e}")
 
     name_lower = filename.lower()
     if any(k in name_lower for k in ["pant", "jean", "hose", "chino", "short"]):
@@ -234,7 +234,7 @@ Antworte auf DEUTSCH mit einem JSON-Objekt in diesem Schema:
 }}"""
 
             response = client.models.generate_content(
-                model="gemini-2.5-flash",
+                model=settings.GEMINI_MODEL,
                 contents=prompt
             )
             text = response.text.strip()
@@ -255,7 +255,7 @@ Antworte auf DEUTSCH mit einem JSON-Objekt in diesem Schema:
                 "fit_score": parsed.get("weather_fit_score", 92)
             }
         except Exception as e:
-            print(f"Gemini styling API error: {e}")
+            print(f"Gemini styling API error with model {settings.GEMINI_MODEL}: {e}")
 
     return algorithmic_outfit_matching(
         tops=tops,

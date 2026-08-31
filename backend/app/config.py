@@ -26,6 +26,7 @@ class Settings:
     PROJECT_NAME: str = "FitCast API"
     DATABASE_URL: str = raw_db_url
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
+    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
     UPLOADS_DIR: Path = UPLOADS_DIR
     STATIC_DIR: Path = STATIC_DIR
 

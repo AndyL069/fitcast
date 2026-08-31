@@ -32,8 +32,9 @@ services:
       # Automatische interne Verbindung zur PostgreSQL DB
       DATABASE_URL: postgresql://fitcast:${POSTGRES_PASSWORD:-geheimespasswort123}@db:5432/fitcast
       
-      # Optional: KI-Vision Bilderkennung
+      # KI-Vision Bilderkennung & Styling
       GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
       
       # Optional: Authentik OIDC SSO
       AUTHENTIK_CLIENT_ID: ${AUTHENTIK_CLIENT_ID}

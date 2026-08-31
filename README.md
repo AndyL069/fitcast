@@ -7,6 +7,7 @@ FitCast is an AI-powered personal stylist and digital wardrobe web application. 
 ## ✨ Key Features
 - 👥 **Multi-User Management & Isolation:** Individual user accounts with private wardrobe galleries and distinct outfit histories.
 - 🐘 **PostgreSQL 16 Database Stack:** Dedicated PostgreSQL database container with automatic health checks and connection pooling.
+- 🤖 **Flexible Gemini Model Support:** Uses `gemini-2.5-flash` by default with support for any model via `GEMINI_MODEL` (e.g. `gemini-2.5-pro`, `gemini-1.5-flash`).
 - 🔐 **Secure Authentication:** Local email/password registration with salted bcrypt hashing and JWT tokens transmitted via `HttpOnly` secure cookies.
 - 🛡️ **Authentik SSO (OIDC):** Single Sign-On with Authentik OpenID Connect (OIDC) when configured via environment variables.
 - 📸 **Photo Upload & Multimodal Auto-Tagging:** Drop in photos of your tops, pants, or shoes. Gemini Vision automatically detects the item category, primary/secondary colors, fabric type, estimated warmth level (1–5), and rain resistance.
@@ -59,8 +60,9 @@ services:
       SECRET_KEY: ${SECRET_KEY:-fitcast-super-secret-key-change-in-production}
       DATABASE_URL: postgresql://fitcast:${POSTGRES_PASSWORD}@db:5432/fitcast
       
-      # Optional: Gemini KI-Vision
+      # KI-Vision Bilderkennung & Styling
       GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
       
       # Optional: Authentik SSO
       AUTHENTIK_CLIENT_ID: ${AUTHENTIK_CLIENT_ID}
@@ -85,6 +87,7 @@ volumes:
    - `AUTHENTIK_CLIENT_SECRET` ➔ `dein-authentik-secret`
    - `AUTHENTIK_ISSUER` ➔ `https://authentik.deinedomain.de/application/o/fitcast/`
    - `GEMINI_API_KEY` *(optional)*
+   - `GEMINI_MODEL` *(optional, Standard: `gemini-2.5-flash`)*
 5. Klicke auf **Deploy the stack**.
 6. Öffne **http://<your-server-ip>:3004** in deinem Browser.
 
