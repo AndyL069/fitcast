@@ -1,0 +1,21 @@
+services:
+  fitcast:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fitcast-app
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - DATABASE_URL=sqlite:////app/data/fitcast.db
+      - UPLOADS_DIR=/app/uploads
+      - STATIC_DIR=/app/static
+    volumes:
+      - ./backend/uploads:/app/uploads
+      - fitcast_data:/app/data
+
+volumes:
+  fitcast_data:
+    driver: local

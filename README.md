@@ -16,22 +16,30 @@ FitCast is an AI-powered personal stylist and digital wardrobe web application. 
 
 ---
 
-## 🛠️ Architecture & Tech Stack
-- **Backend:** Python 3.10+, FastAPI, SQLAlchemy, Pydantic v2, Google GenAI SDK (`google-genai`), Pytest.
-- **Database & Storage:** SQLite (`fitcast.db`), local image uploads in `backend/uploads/`.
-- **Frontend:** React 19, TypeScript, Vite, Tailwind CSS, Lucide React icons.
-- **Weather Provider:** Open-Meteo REST API (public, no key required).
+## 🐳 Docker Deployment (Recommended)
+
+Run the entire full-stack application (frontend + backend + database) in a single command using Docker Compose:
+
+```bash
+docker compose up -d --build
+```
+
+Then open **http://localhost:8000** in your browser.
+
+- **Stop container:** `docker compose down`
+- **View logs:** `docker compose logs -f`
+- **Data Persistence:** Uploaded photos (`./backend/uploads`) and SQLite database (`fitcast_data` volume) are persisted across restarts.
 
 ---
 
-## 🚀 Quickstart
+## 🚀 Local Development (Without Docker)
 
 ### Method 1: Single-Click Launcher (Windows)
-Run either script from the project root:
+Run from the project root:
 ```powershell
 .\start.ps1
 ```
-or double-click `start.bat`.
+*(or double-click `start.bat`)*
 
 ---
 
