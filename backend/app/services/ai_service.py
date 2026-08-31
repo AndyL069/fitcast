@@ -148,12 +148,20 @@ Gib ein valides JSON-Objekt auf Deutsch zurück:
 }
 Antworte NUR mit reinem JSON ohne Markdown-Codeblöcke."""
 
+            config_kwargs: Dict[str, Any] = {"response_mime_type": "application/json"}
+            try:
+                config_kwargs["thinking_config"] = types.ThinkingConfig(thinking_budget=0)
+            except Exception:
+                pass
+            config = types.GenerateContentConfig(**config_kwargs)
+
             response = client.models.generate_content(
                 model=settings.GEMINI_MODEL,
                 contents=[
                     types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg"),
                     prompt
-                ]
+                ],
+                config=config
             )
             text = response.text.strip()
             if text.startswith("```json"): text = text[7:]
@@ -201,6 +209,8 @@ async def generate_outfit_with_ai(
     if settings.GEMINI_API_KEY and len(tops) > 0 and len(pants) > 0 and len(shoes) > 0:
         try:
             from google import genai
+            from google.genai import types
+
             client = genai.Client(api_key=settings.GEMINI_API_KEY)
             
             top_catalog = [{"id": t.id, "name": t.name, "color": t.color, "warmth": t.warmth_level, "formality": t.formality} for t in tops]
@@ -233,9 +243,17 @@ Antworte auf DEUTSCH mit einem JSON-Objekt in diesem Schema:
   "weather_fit_score": <int zwischen 80 und 99>
 }}"""
 
+            config_kwargs: Dict[str, Any] = {"response_mime_type": "application/json"}
+            try:
+                config_kwargs["thinking_config"] = types.ThinkingConfig(thinking_budget=0)
+            except Exception:
+                pass
+            config = types.GenerateContentConfig(**config_kwargs)
+
             response = client.models.generate_content(
                 model=settings.GEMINI_MODEL,
-                contents=prompt
+                contents=prompt,
+                config=config
             )
             text = response.text.strip()
             if text.startswith("```json"): text = text[7:]

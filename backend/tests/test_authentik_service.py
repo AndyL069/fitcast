@@ -27,14 +27,16 @@ async def test_authentik_exchange_code_for_user():
     )
 
     with patch("httpx.AsyncClient.post") as mock_post, patch("httpx.AsyncClient.get") as mock_get:
-        # Mock token response (httpx.Response.json is synchronous)
+        # Mock token response
         mock_post_res = MagicMock()
+        mock_post_res.status_code = 200
         mock_post_res.json.return_value = {"access_token": "mock_token_abc"}
         mock_post_res.raise_for_status = MagicMock()
         mock_post.return_value = mock_post_res
 
         # Mock userinfo response
         mock_get_res = MagicMock()
+        mock_get_res.status_code = 200
         mock_get_res.json.return_value = {
             "sub": "auth-sub-999",
             "email": "authentik_user@example.com",

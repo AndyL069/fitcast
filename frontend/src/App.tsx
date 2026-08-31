@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { 
   ClothingItem, 
   WeatherData, 
@@ -38,6 +38,7 @@ const MainApp: React.FC = () => {
   // Outfit state
   const [outfit, setOutfit] = useState<OutfitRecommendation | null>(null);
   const [outfitLoading, setOutfitLoading] = useState(false);
+  const initialOutfitLoadedRef = useRef(false);
 
   // History state
   const [history, setHistory] = useState<OutfitHistoryItem[]>([]);
@@ -100,6 +101,7 @@ const MainApp: React.FC = () => {
         locked_shoes_id: lockedShoesId,
       });
       setOutfit(res);
+      initialOutfitLoadedRef.current = true;
     } catch (err) {
       console.error('Outfit-Empfehlung fehlgeschlagen', err);
     } finally {
@@ -108,7 +110,7 @@ const MainApp: React.FC = () => {
   }, [items, weather]);
 
   // Load History
-  const loadHistory = async () => {
+  const loadHistory = useCallback(async () => {
     try {
       setHistoryLoading(true);
       const data = await api.getHistory();
@@ -118,16 +120,21 @@ const MainApp: React.FC = () => {
     } finally {
       setHistoryLoading(false);
     }
-  };
+  }, []);
 
-  // Reload wardrobe on user login/logout
+  // Reload wardrobe ONLY on user login/logout (NOT on tab switch)
   useEffect(() => {
     loadItems();
     setOutfit(null);
+    initialOutfitLoadedRef.current = false;
+  }, [user, loadItems]);
+
+  // Load History ONLY when entering history tab
+  useEffect(() => {
     if (activeTab === 'history') {
       loadHistory();
     }
-  }, [user, loadItems, activeTab]);
+  }, [activeTab, loadHistory]);
 
   // Initial load & Geolocation
   useEffect(() => {
@@ -149,10 +156,11 @@ const MainApp: React.FC = () => {
     } else {
       loadWeather(52.52, 13.405, 'Berlin');
     }
-  }, []);
+  }, [loadWeather]);
 
+  // Only auto-generate initial outfit ONCE when items and weather are ready
   useEffect(() => {
-    if (weather && items.length >= 3 && !outfit) {
+    if (weather && items.length >= 3 && !outfit && !initialOutfitLoadedRef.current) {
       loadOutfit(weather);
     }
   }, [weather, items, outfit, loadOutfit]);
@@ -165,17 +173,24 @@ const MainApp: React.FC = () => {
 
   const handleItemAdded = (item: ClothingItem) => {
     setItems((prev) => [item, ...prev]);
-    setOutfit(null);
   };
 
   const handleDeleteItem = async (id: number) => {
     if (!confirm('Möchtest du dieses Kleidungsstück wirklich aus deinem Schrank entfernen?')) return;
     try {
       await api.deleteItem(id);
+      // Immediately remove from UI state
       setItems((prev) => prev.filter((i) => i.id !== id));
-      setOutfit(null);
+      // Invalidate current outfit only if it contained this deleted item
+      setOutfit((current) => {
+        if (!current) return null;
+        if (current.top.id === id || current.pants.id === id || current.shoes.id === id) {
+          return null;
+        }
+        return current;
+      });
     } catch (err) {
-      console.error(err);
+      console.error('Löschen fehlgeschlagen:', err);
       alert('Löschen fehlgeschlagen.');
     }
   };
@@ -185,7 +200,6 @@ const MainApp: React.FC = () => {
       setSeeding(true);
       await api.seedSampleWardrobe();
       await loadItems();
-      setOutfit(null);
     } catch (err) {
       console.error(err);
       alert('Beispiel-Garderobe konnte nicht geladen werden.');
