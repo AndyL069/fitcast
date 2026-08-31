@@ -151,6 +151,7 @@ export const api = {
     locked_top_id?: number | null;
     locked_pants_id?: number | null;
     locked_shoes_id?: number | null;
+    locked_jacket_id?: number | null;
   }): Promise<OutfitRecommendation> {
     const res = await fetch(`${API_BASE}/outfit/recommend`, {
       method: 'POST',
@@ -169,18 +170,23 @@ export const api = {
     top_id: number;
     pants_id: number;
     shoes_id: number;
+    jacket_id?: number | null;
     weather: WeatherData;
     ai_explanation: string;
     vibe?: string;
   }): Promise<{ id: number }> {
-    const query = new URLSearchParams({
+    const queryParams: Record<string, string> = {
       top_id: String(params.top_id),
       pants_id: String(params.pants_id),
       shoes_id: String(params.shoes_id),
       weather_json: JSON.stringify(params.weather),
       ai_explanation: params.ai_explanation,
       vibe: params.vibe || 'casual',
-    });
+    };
+    if (params.jacket_id) {
+      queryParams.jacket_id = String(params.jacket_id);
+    }
+    const query = new URLSearchParams(queryParams);
     const res = await fetch(`${API_BASE}/outfit/wear?${query.toString()}`, {
       method: 'POST',
       credentials: 'include',

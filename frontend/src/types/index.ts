@@ -1,4 +1,4 @@
-export type CategoryType = 'top' | 'pants' | 'shoes';
+export type CategoryType = 'top' | 'pants' | 'shoes' | 'jacket';
 
 export interface User {
   id: number;
@@ -59,6 +59,7 @@ export interface OutfitRecommendation {
   top: ClothingItem;
   pants: ClothingItem;
   shoes: ClothingItem;
+  jacket?: ClothingItem | null;
   ai_explanation: string;
   styling_tips: string[];
   weather_fit_score: number;
@@ -70,6 +71,7 @@ export interface OutfitHistoryItem {
   top: ClothingItem | null;
   pants: ClothingItem | null;
   shoes: ClothingItem | null;
+  jacket?: ClothingItem | null;
   weather: WeatherData;
   ai_explanation: string;
   vibe: string;

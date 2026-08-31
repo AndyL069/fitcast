@@ -67,7 +67,7 @@ const MainApp: React.FC = () => {
     }
   }, []);
 
-  // Fetch Weather Forecast (Fixed: zero state dependencies)
+  // Fetch Weather Forecast (zero state dependencies)
   const loadWeather = useCallback(async (lat: number, lon: number, city?: string) => {
     try {
       setWeatherLoading(true);
@@ -86,7 +86,8 @@ const MainApp: React.FC = () => {
     vibe: VibeType = 'casual',
     lockedTopId?: number | null,
     lockedPantsId?: number | null,
-    lockedShoesId?: number | null
+    lockedShoesId?: number | null,
+    lockedJacketId?: number | null
   ) => {
     if (!currentWeather) return;
     const topCount = items.filter((i) => i.category === 'top').length;
@@ -102,6 +103,7 @@ const MainApp: React.FC = () => {
         locked_top_id: lockedTopId,
         locked_pants_id: lockedPantsId,
         locked_shoes_id: lockedShoesId,
+        locked_jacket_id: lockedJacketId,
       });
       setOutfit(res);
       initialOutfitLoadedRef.current = true;
@@ -188,11 +190,13 @@ const MainApp: React.FC = () => {
       let newTop = curr.top.id === updated.id ? updated : curr.top;
       let newPants = curr.pants.id === updated.id ? updated : curr.pants;
       let newShoes = curr.shoes.id === updated.id ? updated : curr.shoes;
+      let newJacket = curr.jacket?.id === updated.id ? updated : curr.jacket;
       return {
         ...curr,
         top: newTop,
         pants: newPants,
         shoes: newShoes,
+        jacket: newJacket,
       };
     });
   };
@@ -206,7 +210,12 @@ const MainApp: React.FC = () => {
       // Invalidate current outfit only if it contained this deleted item
       setOutfit((current) => {
         if (!current) return null;
-        if (current.top.id === id || current.pants.id === id || current.shoes.id === id) {
+        if (
+          current.top.id === id || 
+          current.pants.id === id || 
+          current.shoes.id === id || 
+          current.jacket?.id === id
+        ) {
           return null;
         }
         return current;
@@ -237,6 +246,7 @@ const MainApp: React.FC = () => {
         top_id: outfit.top.id,
         pants_id: outfit.pants.id,
         shoes_id: outfit.shoes.id,
+        jacket_id: outfit.jacket ? outfit.jacket.id : null,
         weather,
         ai_explanation: outfit.ai_explanation,
       });
@@ -285,8 +295,8 @@ const MainApp: React.FC = () => {
             onSelectCity={handleSelectCity}
             outfit={outfit}
             outfitLoading={outfitLoading}
-            onRecommendOutfit={(vibe, topId, pantsId, shoesId) =>
-              loadOutfit(weather, vibe, topId, pantsId, shoesId)
+            onRecommendOutfit={(vibe, topId, pantsId, shoesId, jacketId) =>
+              loadOutfit(weather, vibe, topId, pantsId, shoesId, jacketId)
             }
             onWearToday={handleWearToday}
             items={items}

@@ -26,6 +26,7 @@ export const ClosetView: React.FC<ClosetViewProps> = ({
   const counts = {
     all: items.length,
     top: items.filter((i) => i.category === 'top').length,
+    jacket: items.filter((i) => i.category === 'jacket').length,
     pants: items.filter((i) => i.category === 'pants').length,
     shoes: items.filter((i) => i.category === 'shoes').length
   };
@@ -33,6 +34,7 @@ export const ClosetView: React.FC<ClosetViewProps> = ({
   const categoryLabels: Record<string, string> = {
     all: 'Alle Teile',
     top: 'Oberteile',
+    jacket: 'Jacken & Mäntel',
     pants: 'Hosen',
     shoes: 'Schuhe'
   };
@@ -54,11 +56,11 @@ export const ClosetView: React.FC<ClosetViewProps> = ({
         
         {/* Category Tabs */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-          {(['all', 'top', 'pants', 'shoes'] as (CategoryType | 'all')[]).map((cat) => (
+          {(['all', 'top', 'jacket', 'pants', 'shoes'] as (CategoryType | 'all')[]).map((cat) => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold capitalize transition-all duration-200 border whitespace-nowrap ${
+              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold capitalize transition-all duration-200 border whitespace-nowrap cursor-pointer ${
                 selectedCategory === cat
                   ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
                   : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'

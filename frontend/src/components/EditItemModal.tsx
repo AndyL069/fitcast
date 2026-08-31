@@ -115,9 +115,10 @@ export const EditItemModal: React.FC<EditItemModalProps> = ({
             />
             <div className="flex-1">
               <label className="block text-xs font-bold text-slate-700 mb-1">Kategorie</label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {[
                   { id: 'top', label: 'Oberteil' },
+                  { id: 'jacket', label: 'Jacke/Mantel' },
                   { id: 'pants', label: 'Hose' },
                   { id: 'shoes', label: 'Schuhe' }
                 ].map((c) => (

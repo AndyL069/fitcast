@@ -10,7 +10,7 @@ NEUTRALS = {
     "beige", "cream", "creme", "khaki", "brown", "braun", "tan", "denim", "neutral"
 }
 
-def calculate_color_score(top_color: str, pants_color: str, shoes_color: str) -> float:
+def calculate_color_score(top_color: str, pants_color: str, shoes_color: str, jacket_color: Optional[str] = None) -> float:
     t, p, s = top_color.lower(), pants_color.lower(), shoes_color.lower()
     score = 10.0
 
@@ -26,6 +26,11 @@ def calculate_color_score(top_color: str, pants_color: str, shoes_color: str) ->
     if s in NEUTRALS or s == t:
         score += 2.0
 
+    if jacket_color:
+        j = jacket_color.lower()
+        if j in NEUTRALS or j in (t, p, s):
+            score += 2.0
+
     return score
 
 def algorithmic_outfit_matching(
@@ -33,10 +38,12 @@ def algorithmic_outfit_matching(
     pants: List[ClothingItem],
     shoes: List[ClothingItem],
     weather: WeatherSummary,
+    jackets: Optional[List[ClothingItem]] = None,
     vibe: str = "casual",
     locked_top_id: Optional[int] = None,
     locked_pants_id: Optional[int] = None,
-    locked_shoes_id: Optional[int] = None
+    locked_shoes_id: Optional[int] = None,
+    locked_jacket_id: Optional[int] = None
 ) -> Dict[str, Any]:
     target_warmth = weather.comfort_target
     target_vibe = vibe.lower() if vibe else "casual"
@@ -48,6 +55,27 @@ def algorithmic_outfit_matching(
     if not cand_tops: cand_tops = tops
     if not cand_pants: cand_pants = pants
     if not cand_shoes: cand_shoes = shoes
+
+    # Jacket selection logic: recommended when chilly, rainy, snowy or explicitly locked
+    needs_jacket = (weather.comfort_target >= 3 or weather.temperature < 19.0 or weather.is_rainy or weather.is_snowy or locked_jacket_id is not None)
+    sel_jacket = None
+
+    if jackets and len(jackets) > 0 and needs_jacket:
+        cand_jackets = [j for j in jackets if j.id == locked_jacket_id] if locked_jacket_id else jackets
+        if not cand_jackets: cand_jackets = jackets
+        # Score jackets based on warmth & rain resistance
+        best_jacket = None
+        best_j_score = -999.0
+        for j in cand_jackets:
+            j_score = 30.0 - (abs(j.warmth_level - target_warmth) * 3.0)
+            if (weather.is_rainy or weather.is_snowy) and j.waterproof:
+                j_score += 15.0
+            if target_vibe != "all" and j.formality == target_vibe:
+                j_score += 4.0
+            if j_score > best_j_score:
+                best_j_score = j_score
+                best_jacket = j
+        sel_jacket = best_jacket
 
     best_combination = None
     highest_score = -9999.0
@@ -83,7 +111,7 @@ def algorithmic_outfit_matching(
                    (top.formality == "formal" and pant.formality == "athletic"):
                     score -= 15.0
 
-                score += calculate_color_score(top.color, pant.color, shoe.color)
+                score += calculate_color_score(top.color, pant.color, shoe.color, sel_jacket.color if sel_jacket else None)
                 jitter = random.uniform(0.0, 1.5)
                 total_score = score + jitter
 
@@ -104,6 +132,9 @@ def algorithmic_outfit_matching(
     else:
         weather_note = f"Für das angenehme Wetter heute ({temp_desc}) bietet die ausgewogene Kombination aus '{sel_top.name}' und '{sel_pants.name}' optimalen Komfort."
 
+    if sel_jacket:
+        weather_note += f" Dazu passt perfekt die Jacke '{sel_jacket.name}'."
+
     if (weather.is_rainy or weather.is_snowy) and sel_shoes.waterproof:
         weather_note += " Dank der wasserdichten Schuhe bleiben deine Füße zudem trocken."
 
@@ -122,6 +153,7 @@ def algorithmic_outfit_matching(
         "top": sel_top,
         "pants": sel_pants,
         "shoes": sel_shoes,
+        "jacket": sel_jacket,
         "explanation": explanation,
         "styling_tips": styling_tips,
         "fit_score": fit_score
@@ -137,8 +169,8 @@ async def analyze_clothing_image_with_ai(image_bytes: bytes, filename: str) -> D
             prompt = """Analysiere dieses Kleidungsstück-Foto.
 Gib ein valides JSON-Objekt auf Deutsch zurück:
 {
-  "category": "top" | "pants" | "shoes",
-  "name": "Beschreibender deutscher Titel (z.B. Dunkelblauer Wollpullover)",
+  "category": "top" | "pants" | "shoes" | "jacket",
+  "name": "Beschreibender deutscher Titel (z.B. Dunkelblauer Wollpullover, Schwarze Lederjacke, Regenmantel)",
   "color": "Farbe auf Deutsch (z.B. Dunkelblau, Weiß, Schwarz, Beige)",
   "pattern": "einfarbig | gestreift | kariert | gemustert",
   "fabric": "Baumwolle | Wolle | Denim | Leder | Leinen | Synthetik | Fleece",
@@ -146,6 +178,11 @@ Gib ein valides JSON-Objekt auf Deutsch zurück:
   "formality": "casual | smart_casual | formal | athletic | lounge",
   "waterproof": true oder false
 }
+Hinweis zur Kategorie:
+- Jacken, Mäntel, Blazer, Parkas, Windbreaker, Steppwesten -> "jacket"
+- T-Shirts, Pullover, Hemden, Tops, Hoodies -> "top"
+- Jeans, Chinos, Shorts, Jogginghosen -> "pants"
+- Sneaker, Stiefel, Loafer, Sandalen -> "shoes"
 Antworte NUR mit reinem JSON ohne Markdown-Codeblöcke."""
 
             config_kwargs: Dict[str, Any] = {"response_mime_type": "application/json"}
@@ -172,7 +209,11 @@ Antworte NUR mit reinem JSON ohne Markdown-Codeblöcke."""
             print(f"Gemini Vision API error with model {settings.GEMINI_MODEL}: {e}")
 
     name_lower = filename.lower()
-    if any(k in name_lower for k in ["pant", "jean", "hose", "chino", "short"]):
+    if any(k in name_lower for k in ["jacke", "jacket", "coat", "mantel", "blazer", "parka", "windbreaker", "weste"]):
+        cat = "jacket"
+        name = "Jacke"
+        warmth = 4
+    elif any(k in name_lower for k in ["pant", "jean", "hose", "chino", "short"]):
         cat = "pants"
         name = "Hose"
         warmth = 3
@@ -201,10 +242,12 @@ async def generate_outfit_with_ai(
     pants: List[ClothingItem],
     shoes: List[ClothingItem],
     weather: WeatherSummary,
+    jackets: Optional[List[ClothingItem]] = None,
     vibe: str = "casual",
     locked_top_id: Optional[int] = None,
     locked_pants_id: Optional[int] = None,
-    locked_shoes_id: Optional[int] = None
+    locked_shoes_id: Optional[int] = None,
+    locked_jacket_id: Optional[int] = None
 ) -> Dict[str, Any]:
     if settings.GEMINI_API_KEY and len(tops) > 0 and len(pants) > 0 and len(shoes) > 0:
         try:
@@ -216,6 +259,7 @@ async def generate_outfit_with_ai(
             top_catalog = [{"id": t.id, "name": t.name, "color": t.color, "warmth": t.warmth_level, "formality": t.formality} for t in tops]
             pants_catalog = [{"id": p.id, "name": p.name, "color": p.color, "warmth": p.warmth_level, "formality": p.formality} for p in pants]
             shoes_catalog = [{"id": s.id, "name": s.name, "color": s.color, "warmth": s.warmth_level, "formality": s.formality, "waterproof": s.waterproof} for s in shoes]
+            jackets_catalog = [{"id": j.id, "name": j.name, "color": j.color, "warmth": j.warmth_level, "formality": j.formality, "waterproof": j.waterproof} for j in (jackets or [])]
 
             prompt = f"""Du bist ein professioneller Personal Stylist.
 Aktuelle Wettervorhersage:
@@ -228,16 +272,19 @@ Aktuelle Wettervorhersage:
 Verfügbare Oberteile: {json.dumps(top_catalog)}
 Verfügbare Hosen: {json.dumps(pants_catalog)}
 Verfügbare Schuhe: {json.dumps(shoes_catalog)}
+Verfügbare Jacken & Mäntel: {json.dumps(jackets_catalog)}
 Festgesetztes Oberteil ID: {locked_top_id}
 Festgesetzte Hose ID: {locked_pants_id}
 Festgesetzte Schuhe ID: {locked_shoes_id}
+Festgesetzte Jacke ID: {locked_jacket_id}
 
-Wähle die beste Kombination aus (1 Oberteil, 1 Hose, 1 Paar Schuhe).
+Wähle die beste Kombination aus (1 Oberteil, 1 Hose, 1 Paar Schuhe und optional 1 Jacke, falls das Wetter kühl/regnerisch ist oder eine Jacke festgesetzt wurde).
 Antworte auf DEUTSCH mit einem JSON-Objekt in diesem Schema:
 {{
   "top_id": <int>,
   "pants_id": <int>,
   "shoes_id": <int>,
+  "jacket_id": <int oder null, falls keine Jacke benötigt wird>,
   "explanation": "<2-3 ansprechende Sätze auf Deutsch, warum dieses Outfit modisch ist und perfekt zum heutigen Wetter passt>",
   "styling_tips": ["<Tipp 1 auf Deutsch>", "<Tipp 2 auf Deutsch>"],
   "weather_fit_score": <int zwischen 80 und 99>
@@ -260,14 +307,19 @@ Antworte auf DEUTSCH mit einem JSON-Objekt in diesem Schema:
             if text.endswith("```"): text = text[:-3]
             parsed = json.loads(text.strip())
             
-            sel_top = next((t for t in tops if t.id == parsed["top_id"]), tops[0])
-            sel_pants = next((p for p in pants if p.id == parsed["pants_id"]), pants[0])
-            sel_shoes = next((s for s in shoes if s.id == parsed["shoes_id"]), shoes[0])
+            sel_top = next((t for t in tops if t.id == parsed.get("top_id")), tops[0])
+            sel_pants = next((p for p in pants if p.id == parsed.get("pants_id")), pants[0])
+            sel_shoes = next((s for s in shoes if s.id == parsed.get("shoes_id")), shoes[0])
+            
+            sel_jacket = None
+            if jackets and parsed.get("jacket_id"):
+                sel_jacket = next((j for j in jackets if j.id == parsed["jacket_id"]), None)
 
             return {
                 "top": sel_top,
                 "pants": sel_pants,
                 "shoes": sel_shoes,
+                "jacket": sel_jacket,
                 "explanation": parsed.get("explanation", "Hervorragende Outfit-Kombination für die heutige Wetterlage."),
                 "styling_tips": parsed.get("styling_tips", ["Mit klassischen Accessoires kombinieren."]),
                 "fit_score": parsed.get("weather_fit_score", 92)
@@ -279,9 +331,11 @@ Antworte auf DEUTSCH mit einem JSON-Objekt in diesem Schema:
         tops=tops,
         pants=pants,
         shoes=shoes,
+        jackets=jackets,
         weather=weather,
         vibe=vibe,
         locked_top_id=locked_top_id,
         locked_pants_id=locked_pants_id,
-        locked_shoes_id=locked_shoes_id
+        locked_shoes_id=locked_shoes_id,
+        locked_jacket_id=locked_jacket_id
     )

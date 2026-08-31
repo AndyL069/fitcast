@@ -24,19 +24,23 @@ async def recommend_outfit(
     query_top = db.query(ClothingItem).filter(ClothingItem.category == "top")
     query_pants = db.query(ClothingItem).filter(ClothingItem.category == "pants")
     query_shoes = db.query(ClothingItem).filter(ClothingItem.category == "shoes")
+    query_jackets = db.query(ClothingItem).filter(ClothingItem.category == "jacket")
 
     if current_user:
         query_top = query_top.filter(ClothingItem.user_id == current_user.id)
         query_pants = query_pants.filter(ClothingItem.user_id == current_user.id)
         query_shoes = query_shoes.filter(ClothingItem.user_id == current_user.id)
+        query_jackets = query_jackets.filter(ClothingItem.user_id == current_user.id)
     else:
         query_top = query_top.filter(ClothingItem.user_id == None)
         query_pants = query_pants.filter(ClothingItem.user_id == None)
         query_shoes = query_shoes.filter(ClothingItem.user_id == None)
+        query_jackets = query_jackets.filter(ClothingItem.user_id == None)
 
     tops = query_top.all()
     pants = query_pants.all()
     shoes = query_shoes.all()
+    jackets = query_jackets.all()
 
     if not tops or not pants or not shoes:
         missing = []
@@ -52,17 +56,20 @@ async def recommend_outfit(
         tops=tops,
         pants=pants,
         shoes=shoes,
+        jackets=jackets,
         weather=payload.weather,
         vibe=payload.vibe or "casual",
         locked_top_id=payload.locked_top_id,
         locked_pants_id=payload.locked_pants_id,
-        locked_shoes_id=payload.locked_shoes_id
+        locked_shoes_id=payload.locked_shoes_id,
+        locked_jacket_id=payload.locked_jacket_id
     )
 
     return OutfitRecommendResponse(
         top=ClothingItemResponse.model_validate(outfit_res["top"]),
         pants=ClothingItemResponse.model_validate(outfit_res["pants"]),
         shoes=ClothingItemResponse.model_validate(outfit_res["shoes"]),
+        jacket=ClothingItemResponse.model_validate(outfit_res["jacket"]) if outfit_res.get("jacket") else None,
         ai_explanation=outfit_res["explanation"],
         styling_tips=outfit_res.get("styling_tips", []),
         weather_fit_score=outfit_res.get("fit_score", 90)
@@ -75,6 +82,7 @@ def log_worn_outfit(
     shoes_id: int,
     weather_json: str,
     ai_explanation: str,
+    jacket_id: Optional[int] = None,
     vibe: str = "casual",
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(get_optional_user)
@@ -84,6 +92,7 @@ def log_worn_outfit(
         top_id=top_id,
         pants_id=pants_id,
         shoes_id=shoes_id,
+        jacket_id=jacket_id,
         weather_data=weather_json,
         ai_explanation=ai_explanation,
         vibe=vibe
@@ -114,6 +123,7 @@ def get_outfit_history(
             "top": ClothingItemResponse.model_validate(r.top) if r.top else None,
             "pants": ClothingItemResponse.model_validate(r.pants) if r.pants else None,
             "shoes": ClothingItemResponse.model_validate(r.shoes) if r.shoes else None,
+            "jacket": ClothingItemResponse.model_validate(r.jacket) if r.jacket else None,
             "weather": json.loads(r.weather_data) if r.weather_data else {},
             "ai_explanation": r.ai_explanation,
             "vibe": r.vibe
@@ -131,15 +141,19 @@ def seed_sample_wardrobe(
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(get_optional_user)
 ):
-    """Erstellt eine kuratierte Beispiel-Garderobe mit Oberteilen, Hosen und Schuhen."""
+    """Erstellt eine kuratierte Beispiel-Garderobe mit Oberteilen, Hosen, Schuhen und Jacken."""
     uid = current_user.id if current_user else None
     sample_items = [
         # Oberteile
         ClothingItem(user_id=uid, category="top", name="Weißes Rundhals T-Shirt", image_url="https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=500&auto=format&fit=crop&q=80", color="Weiß", pattern="einfarbig", fabric="Baumwolle", warmth_level=2, formality="casual", waterproof=False),
         ClothingItem(user_id=uid, category="top", name="Dunkelblauer Merinowoll-Pullover", image_url="https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=500&auto=format&fit=crop&q=80", color="Dunkelblau", pattern="einfarbig", fabric="Wolle", warmth_level=4, formality="smart_casual", waterproof=False),
         ClothingItem(user_id=uid, category="top", name="Olivgrünes Cord-Overshirt", image_url="https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=500&auto=format&fit=crop&q=80", color="Olivgrün", pattern="einfarbig", fabric="Cord", warmth_level=3, formality="casual", waterproof=False),
-        ClothingItem(user_id=uid, category="top", name="Schwarze Stepp-Winterjacke", image_url="https://images.unsplash.com/photo-1544923246-77307dd654cb?w=500&auto=format&fit=crop&q=80", color="Schwarz", pattern="einfarbig", fabric="Synthetik", warmth_level=5, formality="casual", waterproof=True),
         ClothingItem(user_id=uid, category="top", name="Gestreiftes Leinenhemd", image_url="https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=500&auto=format&fit=crop&q=80", color="Beige", pattern="gestreift", fabric="Leinen", warmth_level=1, formality="smart_casual", waterproof=False),
+
+        # Jacken & Mäntel
+        ClothingItem(user_id=uid, category="jacket", name="Schwarze Stepp-Winterjacke", image_url="https://images.unsplash.com/photo-1544923246-77307dd654cb?w=500&auto=format&fit=crop&q=80", color="Schwarz", pattern="einfarbig", fabric="Synthetik", warmth_level=5, formality="casual", waterproof=True),
+        ClothingItem(user_id=uid, category="jacket", name="Klassischer beiger Trenchcoat", image_url="https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=500&auto=format&fit=crop&q=80", color="Beige", pattern="einfarbig", fabric="Baumwolle", warmth_level=3, formality="smart_casual", waterproof=True),
+        ClothingItem(user_id=uid, category="jacket", name="Dunkelblaue Jeansjacke", image_url="https://images.unsplash.com/photo-1576995853123-5a10305d93c0?w=500&auto=format&fit=crop&q=80", color="Dunkelblau", pattern="einfarbig", fabric="Denim", warmth_level=3, formality="casual", waterproof=False),
 
         # Hosen
         ClothingItem(user_id=uid, category="pants", name="Klassische Slim-Fit Jeans", image_url="https://images.unsplash.com/photo-1542272604-780c96856592?w=500&auto=format&fit=crop&q=80", color="Blau", pattern="einfarbig", fabric="Denim", warmth_level=3, formality="casual", waterproof=False),

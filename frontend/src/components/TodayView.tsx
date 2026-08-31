@@ -21,7 +21,8 @@ interface TodayViewProps {
     vibe: VibeType,
     lockedTopId?: number | null,
     lockedPantsId?: number | null,
-    lockedShoesId?: number | null
+    lockedShoesId?: number | null,
+    lockedJacketId?: number | null
   ) => void;
   onWearToday: () => void;
   items: ClothingItem[];
@@ -48,16 +49,18 @@ export const TodayView: React.FC<TodayViewProps> = ({
   const [lockedTop, setLockedTop] = useState(false);
   const [lockedPants, setLockedPants] = useState(false);
   const [lockedShoes, setLockedShoes] = useState(false);
+  const [lockedJacket, setLockedJacket] = useState(false);
 
   const topCount = items.filter((i) => i.category === 'top').length;
   const pantsCount = items.filter((i) => i.category === 'pants').length;
   const shoesCount = items.filter((i) => i.category === 'shoes').length;
   const isWardrobeReady = topCount > 0 && pantsCount > 0 && shoesCount > 0;
 
-  const handleToggleLock = (slot: 'top' | 'pants' | 'shoes') => {
+  const handleToggleLock = (slot: 'top' | 'pants' | 'shoes' | 'jacket') => {
     if (slot === 'top') setLockedTop(!lockedTop);
     if (slot === 'pants') setLockedPants(!lockedPants);
     if (slot === 'shoes') setLockedShoes(!lockedShoes);
+    if (slot === 'jacket') setLockedJacket(!lockedJacket);
   };
 
   const handleShuffle = () => {
@@ -65,7 +68,8 @@ export const TodayView: React.FC<TodayViewProps> = ({
       selectedVibe,
       lockedTop && outfit ? outfit.top.id : null,
       lockedPants && outfit ? outfit.pants.id : null,
-      lockedShoes && outfit ? outfit.shoes.id : null
+      lockedShoes && outfit ? outfit.shoes.id : null,
+      lockedJacket && outfit && outfit.jacket ? outfit.jacket.id : null
     );
   };
 
@@ -75,7 +79,8 @@ export const TodayView: React.FC<TodayViewProps> = ({
       newVibe,
       lockedTop && outfit ? outfit.top.id : null,
       lockedPants && outfit ? outfit.pants.id : null,
-      lockedShoes && outfit ? outfit.shoes.id : null
+      lockedShoes && outfit ? outfit.shoes.id : null,
+      lockedJacket && outfit && outfit.jacket ? outfit.jacket.id : null
     );
   };
 
@@ -97,9 +102,11 @@ export const TodayView: React.FC<TodayViewProps> = ({
             top={outfit.top}
             pants={outfit.pants}
             shoes={outfit.shoes}
+            jacket={outfit.jacket}
             lockedTop={lockedTop}
             lockedPants={lockedPants}
             lockedShoes={lockedShoes}
+            lockedJacket={lockedJacket}
             onToggleLock={handleToggleLock}
           />
 

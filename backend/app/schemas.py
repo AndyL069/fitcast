@@ -32,7 +32,7 @@ class ProvidersResponse(BaseModel):
 # Clothing Item Schemas
 # ============================
 class ClothingItemBase(BaseModel):
-    category: str
+    category: str  # top, pants, shoes, jacket
     name: str
     color: Optional[str] = "neutral"
     secondary_colors: Optional[str] = "[]"
@@ -88,11 +88,13 @@ class OutfitRecommendRequest(BaseModel):
     locked_top_id: Optional[int] = None
     locked_pants_id: Optional[int] = None
     locked_shoes_id: Optional[int] = None
+    locked_jacket_id: Optional[int] = None
 
 class OutfitRecommendResponse(BaseModel):
     top: ClothingItemResponse
     pants: ClothingItemResponse
     shoes: ClothingItemResponse
+    jacket: Optional[ClothingItemResponse] = None
     ai_explanation: str
     styling_tips: List[str]
     weather_fit_score: int

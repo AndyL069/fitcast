@@ -6,19 +6,23 @@ interface OutfitCanvasProps {
   top: ClothingItem;
   pants: ClothingItem;
   shoes: ClothingItem;
+  jacket?: ClothingItem | null;
   lockedTop: boolean;
   lockedPants: boolean;
   lockedShoes: boolean;
-  onToggleLock: (slot: 'top' | 'pants' | 'shoes') => void;
+  lockedJacket: boolean;
+  onToggleLock: (slot: 'top' | 'pants' | 'shoes' | 'jacket') => void;
 }
 
 export const OutfitCanvas: React.FC<OutfitCanvasProps> = ({
   top,
   pants,
   shoes,
+  jacket,
   lockedTop,
   lockedPants,
   lockedShoes,
+  lockedJacket,
   onToggleLock
 }) => {
   const formalityLabels: Record<string, string> = {
@@ -31,7 +35,7 @@ export const OutfitCanvas: React.FC<OutfitCanvasProps> = ({
 
   const renderSlotCard = (
     item: ClothingItem,
-    slot: 'top' | 'pants' | 'shoes',
+    slot: 'top' | 'pants' | 'shoes' | 'jacket',
     isLocked: boolean,
     slotTitle: string
   ) => {
@@ -41,7 +45,7 @@ export const OutfitCanvas: React.FC<OutfitCanvasProps> = ({
         {/* Slot Header Banner */}
         <div className="px-4 py-2.5 bg-slate-50/80 border-b border-slate-100 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-blue-600"></span>
+            <span className={`w-2 h-2 rounded-full ${slot === 'jacket' ? 'bg-indigo-600' : 'bg-blue-600'}`}></span>
             <span className="text-xs font-bold uppercase tracking-wider text-slate-700">
               {slotTitle}
             </span>
@@ -50,7 +54,7 @@ export const OutfitCanvas: React.FC<OutfitCanvasProps> = ({
           {/* Lock Button */}
           <button
             onClick={() => onToggleLock(slot)}
-            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all duration-200 ${
+            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer ${
               isLocked
                 ? 'bg-amber-100 text-amber-900 border border-amber-300'
                 : 'bg-white text-slate-500 hover:text-slate-800 border border-slate-200 shadow-xs'
@@ -124,8 +128,11 @@ export const OutfitCanvas: React.FC<OutfitCanvasProps> = ({
     );
   };
 
+  const hasJacket = Boolean(jacket);
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
+    <div className={`grid gap-4 lg:gap-6 ${hasJacket ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 md:grid-cols-3'}`}>
+      {jacket && renderSlotCard(jacket, 'jacket', lockedJacket, 'Jacke & Mantel')}
       {renderSlotCard(top, 'top', lockedTop, 'Oberteil')}
       {renderSlotCard(pants, 'pants', lockedPants, 'Hose / Unterteil')}
       {renderSlotCard(shoes, 'shoes', lockedShoes, 'Schuhe')}

@@ -27,7 +27,7 @@ class ClothingItem(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
-    category = Column(String(20), nullable=False, index=True)  # top, pants, shoes
+    category = Column(String(20), nullable=False, index=True)  # top, pants, shoes, jacket
     name = Column(String(100), nullable=False)
     image_url = Column(String(255), nullable=False)
     color = Column(String(50), default="neutral")
@@ -50,6 +50,7 @@ class OutfitHistory(Base):
     top_id = Column(Integer, ForeignKey("clothing_items.id"), nullable=False)
     pants_id = Column(Integer, ForeignKey("clothing_items.id"), nullable=False)
     shoes_id = Column(Integer, ForeignKey("clothing_items.id"), nullable=False)
+    jacket_id = Column(Integer, ForeignKey("clothing_items.id"), nullable=True)
     weather_data = Column(Text, nullable=False)  # JSON string
     ai_explanation = Column(Text, nullable=False)
     vibe = Column(String(50), default="casual")
@@ -58,3 +59,4 @@ class OutfitHistory(Base):
     top = relationship("ClothingItem", foreign_keys=[top_id])
     pants = relationship("ClothingItem", foreign_keys=[pants_id])
     shoes = relationship("ClothingItem", foreign_keys=[shoes_id])
+    jacket = relationship("ClothingItem", foreign_keys=[jacket_id])

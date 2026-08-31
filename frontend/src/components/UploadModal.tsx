@@ -170,9 +170,10 @@ export const UploadModal: React.FC<UploadModalProps> = ({
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
               Kategorie
             </label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {[
                 { id: 'top' as CategoryType, label: 'Oberteil' },
+                { id: 'jacket' as CategoryType, label: 'Jacke/Mantel' },
                 { id: 'pants' as CategoryType, label: 'Hose' },
                 { id: 'shoes' as CategoryType, label: 'Schuhe' }
               ].map((cat) => (

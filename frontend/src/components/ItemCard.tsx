@@ -9,14 +9,16 @@ interface ItemCardProps {
 }
 
 export const ItemCard: React.FC<ItemCardProps> = ({ item, onDelete, onEdit }) => {
-  const categoryLabels = {
+  const categoryLabels: Record<string, string> = {
     top: 'Oberteil',
+    jacket: 'Jacke/Mantel',
     pants: 'Hose',
     shoes: 'Schuhe'
   };
 
-  const categoryColors = {
+  const categoryColors: Record<string, string> = {
     top: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+    jacket: 'bg-purple-50 text-purple-700 border-purple-200',
     pants: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     shoes: 'bg-amber-50 text-amber-700 border-amber-200'
   };
