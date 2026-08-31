@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 from app.database import engine, Base
-from app.routes import items, weather
+from app.routes import items, weather, outfit
 
 # Create DB tables
 Base.metadata.create_all(bind=engine)
@@ -30,6 +30,7 @@ app.mount("/uploads", StaticFiles(directory=str(settings.UPLOADS_DIR)), name="up
 # Include Routers
 app.include_router(items.router)
 app.include_router(weather.router)
+app.include_router(outfit.router)
 
 @app.get("/api/health")
 def health_check():
