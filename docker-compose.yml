@@ -1,15 +1,34 @@
 services:
+  db:
+    image: postgres:16-alpine
+    container_name: fitcast-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: fitcast
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-geheimespasswort123}
+      POSTGRES_DB: fitcast
+    volumes:
+      - fitcast_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fitcast -d fitcast"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   fitcast:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: fitcast-app
     restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
     ports:
       - "${PORT:-3004}:8000"
     environment:
       SECRET_KEY: ${SECRET_KEY:-fitcast-super-secret-key-development-mode-2026}
-      DATABASE_URL: ${DATABASE_URL:-sqlite:////app/data/fitcast.db}
+      DATABASE_URL: postgresql://fitcast:${POSTGRES_PASSWORD:-geheimespasswort123}@db:5432/fitcast
       GEMINI_API_KEY: ${GEMINI_API_KEY}
       AUTHENTIK_CLIENT_ID: ${AUTHENTIK_CLIENT_ID}
       AUTHENTIK_CLIENT_SECRET: ${AUTHENTIK_CLIENT_SECRET}
@@ -18,8 +37,7 @@ services:
       STATIC_DIR: /app/static
     volumes:
       - ./backend/uploads:/app/uploads
-      - fitcast_data:/app/data
 
 volumes:
-  fitcast_data:
+  fitcast_db_data:
     driver: local

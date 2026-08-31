@@ -6,7 +6,7 @@ FitCast is an AI-powered personal stylist and digital wardrobe web application. 
 
 ## ✨ Key Features
 - 👥 **Multi-User Management & Isolation:** Individual user accounts with private wardrobe galleries and distinct outfit histories.
-- 🐘 **PostgreSQL & SQLite Support:** Runs seamlessly with your existing PostgreSQL database or self-contained SQLite.
+- 🐘 **PostgreSQL 16 Database Stack:** Dedicated PostgreSQL database container with automatic health checks and connection pooling.
 - 🔐 **Secure Authentication:** Local email/password registration with salted bcrypt hashing and JWT tokens transmitted via `HttpOnly` secure cookies.
 - 🛡️ **Authentik SSO (OIDC):** Single Sign-On with Authentik OpenID Connect (OIDC) when configured via environment variables.
 - 📸 **Photo Upload & Multimodal Auto-Tagging:** Drop in photos of your tops, pants, or shoes. Gemini Vision automatically detects the item category, primary/secondary colors, fabric type, estimated warmth level (1–5), and rain resistance.
@@ -22,7 +22,7 @@ FitCast is an AI-powered personal stylist and digital wardrobe web application. 
 
 ## 🚢 Portainer Stack Deployment (via GHCR Image)
 
-You can run FitCast directly in **Portainer** using the pre-built image from GitHub Container Registry:
+You can run FitCast directly in **Portainer** using the pre-built image from GitHub Container Registry with a dedicated PostgreSQL database:
 
 1. In Portainer, go to **Stacks** ➔ **Add stack**.
 2. Name the stack (e.g. `fitcast`).
@@ -30,17 +30,34 @@ You can run FitCast directly in **Portainer** using the pre-built image from Git
 
 ```yaml
 services:
+  db:
+    image: postgres:16-alpine
+    container_name: fitcast-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: fitcast
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: fitcast
+    volumes:
+      - fitcast_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fitcast -d fitcast"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   fitcast:
     image: ghcr.io/andyl069/fitcast:latest
     container_name: fitcast-app
     restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
     ports:
       - "${PORT:-3004}:8000"
     environment:
-      SECRET_KEY: ${SECRET_KEY:-ein-sehr-geheimer-schluessel-12345}
-      
-      # Datenbank: PostgreSQL (oder SQLite als Fallback)
-      DATABASE_URL: ${DATABASE_URL:-sqlite:////app/data/fitcast.db}
+      SECRET_KEY: ${SECRET_KEY:-fitcast-super-secret-key-change-in-production}
+      DATABASE_URL: postgresql://fitcast:${POSTGRES_PASSWORD}@db:5432/fitcast
       
       # Optional: Gemini KI-Vision
       GEMINI_API_KEY: ${GEMINI_API_KEY}
@@ -55,15 +72,14 @@ services:
       STATIC_DIR: /app/static
     volumes:
       - fitcast_uploads:/app/uploads
-      - fitcast_data:/app/data
 
 volumes:
   fitcast_uploads:
-  fitcast_data:
+  fitcast_db_data:
 ```
 
 4. Unter **Environment variables** in Portainer kannst du nun deine Variablen definieren:
-   - `DATABASE_URL` ➔ `postgresql://user:password@postgres-host:5432/fitcast`
+   - `POSTGRES_PASSWORD` ➔ `dein-sicheres-db-passwort`
    - `SECRET_KEY` ➔ `dein-geheimer-schluessel`
    - `AUTHENTIK_CLIENT_ID` ➔ `fitcast`
    - `AUTHENTIK_CLIENT_SECRET` ➔ `dein-authentik-secret`
