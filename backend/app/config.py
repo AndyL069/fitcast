@@ -30,10 +30,10 @@ class Settings:
     ACCESS_TOKEN_EXPIRE_DAYS: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_DAYS", "7"))
     COOKIE_NAME: str = "fitcast_session"
 
-    # Authentik OIDC
+    # Authentik OIDC (supports both AUTHENTIK_ISSUER and AUTHENTIK_ISSUER_URL)
     AUTHENTIK_CLIENT_ID: str = os.getenv("AUTHENTIK_CLIENT_ID", "")
     AUTHENTIK_CLIENT_SECRET: str = os.getenv("AUTHENTIK_CLIENT_SECRET", "")
-    AUTHENTIK_ISSUER_URL: str = os.getenv("AUTHENTIK_ISSUER_URL", "")
+    AUTHENTIK_ISSUER_URL: str = os.getenv("AUTHENTIK_ISSUER") or os.getenv("AUTHENTIK_ISSUER_URL", "")
     AUTHENTIK_REDIRECT_URI: str = os.getenv("AUTHENTIK_REDIRECT_URI", "")
 
     @property

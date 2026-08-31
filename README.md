@@ -34,18 +34,23 @@ services:
     container_name: fitcast-app
     restart: unless-stopped
     ports:
-      - "3004:8000"
+      - "${PORT:-3004}:8000"
     environment:
-      - SECRET_KEY=ein-sehr-geheimer-schluessel-12345
+      SECRET_KEY: ${SECRET_KEY:-ein-sehr-geheimer-schluessel-12345}
       
       # Optional: Gemini KI-Vision
-      - GEMINI_API_KEY=
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
       
       # Optional: Authentik SSO
-      - AUTHENTIK_CLIENT_ID=fitcast
-      - AUTHENTIK_CLIENT_SECRET=dein-authentik-secret
-      - AUTHENTIK_ISSUER_URL=https://authentik.deinedomain.de/application/o/fitcast/
-      - AUTHENTIK_REDIRECT_URI=https://fitcast.deinedomain.de/api/auth/authentik/callback
+      AUTHENTIK_CLIENT_ID: ${AUTHENTIK_CLIENT_ID}
+      AUTHENTIK_CLIENT_SECRET: ${AUTHENTIK_CLIENT_SECRET}
+      AUTHENTIK_ISSUER: ${AUTHENTIK_ISSUER}
+      AUTHENTIK_REDIRECT_URI: ${AUTHENTIK_REDIRECT_URI}
+      
+      # Pfade
+      DATABASE_URL: sqlite:////app/data/fitcast.db
+      UPLOADS_DIR: /app/uploads
+      STATIC_DIR: /app/static
     volumes:
       - fitcast_uploads:/app/uploads
       - fitcast_data:/app/data
@@ -55,8 +60,15 @@ volumes:
   fitcast_data:
 ```
 
-4. Click **Deploy the stack**.
-5. Open **http://<your-server-ip>:3004** in your browser.
+4. Unter **Environment variables** in Portainer kannst du nun bequem deine Variablen definieren:
+   - `SECRET_KEY`
+   - `AUTHENTIK_CLIENT_ID`
+   - `AUTHENTIK_CLIENT_SECRET`
+   - `AUTHENTIK_ISSUER`
+   - `AUTHENTIK_REDIRECT_URI`
+   - `GEMINI_API_KEY` (optional)
+5. Klicke auf **Deploy the stack**.
+6. Öffne **http://<your-server-ip>:3004** in deinem Browser.
 
 ---
 
@@ -69,27 +81,6 @@ docker compose up -d --build
 ```
 
 Then open **http://localhost:3004** in your browser.
-
----
-
-## 🔑 Authentication & Authentik Configuration
-
-### Local Auth:
-Works out-of-the-box with no configuration required.
-
-### Authentik OIDC SSO (Optional):
-To enable the **"Mit Authentik anmelden"** button, set the following environment variables:
-
-```bash
-# JWT Secret Key
-SECRET_KEY="dein-sicherer-geheimer-schluessel"
-
-# Authentik OIDC Settings
-AUTHENTIK_CLIENT_ID="fitcast-client-id"
-AUTHENTIK_CLIENT_SECRET="fitcast-client-secret"
-AUTHENTIK_ISSUER_URL="https://authentik.company.local/application/o/fitcast/"
-AUTHENTIK_REDIRECT_URI="http://localhost:3004/api/auth/authentik/callback"
-```
 
 ---
 

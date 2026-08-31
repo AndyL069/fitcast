@@ -5,24 +5,24 @@ services:
     container_name: fitcast-app
     restart: unless-stopped
     ports:
-      - "3004:8000"
+      - "${PORT:-3004}:8000"
     environment:
-      # Sicherheit (erforderlich)
-      - SECRET_KEY=${SECRET_KEY:-fitcast-super-secret-key-change-in-production}
+      # Sicherheit (JWT Session)
+      SECRET_KEY: ${SECRET_KEY:-fitcast-super-secret-key-change-in-production}
       
       # Optional: KI-Vision Bilderkennung
-      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
       
       # Optional: Authentik OIDC SSO
-      - AUTHENTIK_CLIENT_ID=${AUTHENTIK_CLIENT_ID:-}
-      - AUTHENTIK_CLIENT_SECRET=${AUTHENTIK_CLIENT_SECRET:-}
-      - AUTHENTIK_ISSUER_URL=${AUTHENTIK_ISSUER_URL:-}
-      - AUTHENTIK_REDIRECT_URI=${AUTHENTIK_REDIRECT_URI:-}
+      AUTHENTIK_CLIENT_ID: ${AUTHENTIK_CLIENT_ID}
+      AUTHENTIK_CLIENT_SECRET: ${AUTHENTIK_CLIENT_SECRET}
+      AUTHENTIK_ISSUER: ${AUTHENTIK_ISSUER}
+      AUTHENTIK_REDIRECT_URI: ${AUTHENTIK_REDIRECT_URI}
       
-      # Pfade
-      - DATABASE_URL=sqlite:////app/data/fitcast.db
-      - UPLOADS_DIR=/app/uploads
-      - STATIC_DIR=/app/static
+      # Anwendungs-Pfade
+      DATABASE_URL: sqlite:////app/data/fitcast.db
+      UPLOADS_DIR: /app/uploads
+      STATIC_DIR: /app/static
     volumes:
       - fitcast_uploads:/app/uploads
       - fitcast_data:/app/data
