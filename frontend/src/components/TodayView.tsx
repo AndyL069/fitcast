@@ -22,7 +22,8 @@ interface TodayViewProps {
     lockedTopId?: number | null,
     lockedPantsId?: number | null,
     lockedShoesId?: number | null,
-    lockedJacketId?: number | null
+    lockedJacketId?: number | null,
+    includeJacket?: boolean
   ) => void;
   onWearToday: () => void;
   items: ClothingItem[];
@@ -50,10 +51,12 @@ export const TodayView: React.FC<TodayViewProps> = ({
   const [lockedPants, setLockedPants] = useState(false);
   const [lockedShoes, setLockedShoes] = useState(false);
   const [lockedJacket, setLockedJacket] = useState(false);
+  const [jacketEnabled, setJacketEnabled] = useState(false);
 
   const topCount = items.filter((i) => i.category === 'top').length;
   const pantsCount = items.filter((i) => i.category === 'pants').length;
   const shoesCount = items.filter((i) => i.category === 'shoes').length;
+  const jacketCount = items.filter((i) => i.category === 'jacket').length;
   const isWardrobeReady = topCount > 0 && pantsCount > 0 && shoesCount > 0;
 
   const handleToggleLock = (slot: 'top' | 'pants' | 'shoes' | 'jacket') => {
@@ -69,7 +72,8 @@ export const TodayView: React.FC<TodayViewProps> = ({
       lockedTop && outfit ? outfit.top.id : null,
       lockedPants && outfit ? outfit.pants.id : null,
       lockedShoes && outfit ? outfit.shoes.id : null,
-      lockedJacket && outfit && outfit.jacket ? outfit.jacket.id : null
+      lockedJacket && outfit && outfit.jacket ? outfit.jacket.id : null,
+      jacketEnabled
     );
   };
 
@@ -80,7 +84,25 @@ export const TodayView: React.FC<TodayViewProps> = ({
       lockedTop && outfit ? outfit.top.id : null,
       lockedPants && outfit ? outfit.pants.id : null,
       lockedShoes && outfit ? outfit.shoes.id : null,
-      lockedJacket && outfit && outfit.jacket ? outfit.jacket.id : null
+      lockedJacket && outfit && outfit.jacket ? outfit.jacket.id : null,
+      jacketEnabled
+    );
+  };
+
+  const handleToggleJacket = () => {
+    const newValue = !jacketEnabled;
+    setJacketEnabled(newValue);
+    if (!newValue) {
+      setLockedJacket(false);
+    }
+    // Re-recommend with jacket toggled
+    onRecommendOutfit(
+      selectedVibe,
+      lockedTop && outfit ? outfit.top.id : null,
+      lockedPants && outfit ? outfit.pants.id : null,
+      lockedShoes && outfit ? outfit.shoes.id : null,
+      null, // reset locked jacket when toggling
+      newValue
     );
   };
 
@@ -98,11 +120,42 @@ export const TodayView: React.FC<TodayViewProps> = ({
       {/* 2. Main Outfit Hero Canvas */}
       {isWardrobeReady && outfit ? (
         <div className="space-y-6">
+
+          {/* Jacket Toggle */}
+          {jacketCount > 0 && (
+            <div className="flex items-center justify-between bg-white/80 backdrop-blur-md rounded-2xl px-4 py-3 border border-slate-200 shadow-xs">
+              <div className="flex items-center gap-3">
+                <span className="text-lg">🧥</span>
+                <div>
+                  <span className="text-sm font-bold text-slate-900">Jacke hinzufügen</span>
+                  <span className="text-xs text-slate-500 ml-2">
+                    {jacketCount} {jacketCount === 1 ? 'Jacke' : 'Jacken'} verfügbar
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={handleToggleJacket}
+                className={`relative w-12 h-7 rounded-full transition-colors duration-200 cursor-pointer ${
+                  jacketEnabled ? 'bg-blue-600' : 'bg-slate-300'
+                }`}
+                role="switch"
+                aria-checked={jacketEnabled}
+                aria-label="Jacke zum Outfit hinzufügen"
+              >
+                <span
+                  className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow-md transition-transform duration-200 ${
+                    jacketEnabled ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+          )}
+
           <OutfitCanvas
             top={outfit.top}
             pants={outfit.pants}
             shoes={outfit.shoes}
-            jacket={outfit.jacket}
+            jacket={jacketEnabled ? outfit.jacket : null}
             lockedTop={lockedTop}
             lockedPants={lockedPants}
             lockedShoes={lockedShoes}

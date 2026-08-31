@@ -85,6 +85,7 @@ class WeatherSummary(BaseModel):
 class OutfitRecommendRequest(BaseModel):
     weather: WeatherSummary
     vibe: Optional[str] = "casual"
+    include_jacket: bool = False
     locked_top_id: Optional[int] = None
     locked_pants_id: Optional[int] = None
     locked_shoes_id: Optional[int] = None

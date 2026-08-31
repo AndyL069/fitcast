@@ -52,11 +52,14 @@ async def recommend_outfit(
             detail=f"Bitte lade mindestens ein Kleidungsstück pro Kategorie hoch. Es fehlen: {', '.join(missing)}"
         )
 
+    # Only include jackets if the user explicitly toggled the jacket switch on
+    effective_jackets = jackets if (payload.include_jacket or payload.locked_jacket_id) else []
+
     outfit_res = await generate_outfit_with_ai(
         tops=tops,
         pants=pants,
         shoes=shoes,
-        jackets=jackets,
+        jackets=effective_jackets,
         weather=payload.weather,
         vibe=payload.vibe or "casual",
         locked_top_id=payload.locked_top_id,

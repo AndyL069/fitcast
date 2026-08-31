@@ -87,7 +87,8 @@ const MainApp: React.FC = () => {
     lockedTopId?: number | null,
     lockedPantsId?: number | null,
     lockedShoesId?: number | null,
-    lockedJacketId?: number | null
+    lockedJacketId?: number | null,
+    includeJacket: boolean = false
   ) => {
     if (!currentWeather) return;
     const topCount = items.filter((i) => i.category === 'top').length;
@@ -100,6 +101,7 @@ const MainApp: React.FC = () => {
       const res = await api.recommendOutfit({
         weather: currentWeather,
         vibe,
+        include_jacket: includeJacket,
         locked_top_id: lockedTopId,
         locked_pants_id: lockedPantsId,
         locked_shoes_id: lockedShoesId,
@@ -305,8 +307,8 @@ const MainApp: React.FC = () => {
             onSelectCity={handleSelectCity}
             outfit={outfit}
             outfitLoading={outfitLoading}
-            onRecommendOutfit={(vibe, topId, pantsId, shoesId, jacketId) =>
-              loadOutfit(weather, vibe, topId, pantsId, shoesId, jacketId)
+            onRecommendOutfit={(vibe, topId, pantsId, shoesId, jacketId, includeJacket) =>
+              loadOutfit(weather, vibe, topId, pantsId, shoesId, jacketId, includeJacket ?? false)
             }
             onWearToday={handleWearToday}
             items={items}

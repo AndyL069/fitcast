@@ -148,6 +148,7 @@ export const api = {
   async recommendOutfit(params: {
     weather: WeatherData;
     vibe?: string;
+    include_jacket?: boolean;
     locked_top_id?: number | null;
     locked_pants_id?: number | null;
     locked_shoes_id?: number | null;
