@@ -1,4 +1,5 @@
 import secrets
+import urllib.parse
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
 from fastapi.responses import RedirectResponse
@@ -162,6 +163,15 @@ async def authentik_login(request: Request, response: Response):
         secure=is_secure,
         path="/"
     )
+    resp.set_cookie(
+        key="fitcast_oauth_redirect_uri",
+        value=redirect_uri,
+        httponly=True,
+        max_age=600,
+        samesite="lax",
+        secure=is_secure,
+        path="/"
+    )
     return resp
 
 # Support both /authentik/callback and /callback/authentik formats
@@ -176,19 +186,24 @@ async def authentik_callback(
     db: Session = Depends(get_db)
 ):
     if error or not code:
-        return RedirectResponse(url="/?auth_error=" + (error or "missing_code"), status_code=status.HTTP_302_FOUND)
+        err_text = urllib.parse.quote(error or "Kein Autorisierungs-Code von Authentik empfangen.")
+        return RedirectResponse(url=f"/?auth_error={err_text}", status_code=status.HTTP_302_FOUND)
 
     expected_state = request.cookies.get("fitcast_oauth_state")
     if not expected_state or expected_state != state:
-        return RedirectResponse(url="/?auth_error=invalid_state", status_code=status.HTTP_302_FOUND)
+        err_text = urllib.parse.quote("State-Token ungültig oder abgelaufen.")
+        return RedirectResponse(url=f"/?auth_error={err_text}", status_code=status.HTTP_302_FOUND)
 
-    redirect_uri = get_redirect_uri(request)
+    # Use the exact redirect_uri stored at login start
+    saved_redirect_uri = request.cookies.get("fitcast_oauth_redirect_uri")
+    redirect_uri = saved_redirect_uri or get_redirect_uri(request)
 
     try:
         user_info = await authentik_service.exchange_code_for_user(code=code, redirect_uri=redirect_uri)
     except Exception as e:
         print(f"Authentik exchange failed: {e}")
-        return RedirectResponse(url="/?auth_error=exchange_failed", status_code=status.HTTP_302_FOUND)
+        err_text = urllib.parse.quote(str(e))
+        return RedirectResponse(url=f"/?auth_error={err_text}", status_code=status.HTTP_302_FOUND)
 
     sub = user_info["sub"]
     email = user_info["email"].lower()
@@ -221,4 +236,5 @@ async def authentik_callback(
     redirect_resp = RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
     set_auth_cookie(redirect_resp, user.id, user.email, request=request)
     redirect_resp.delete_cookie(key="fitcast_oauth_state", path="/")
+    redirect_resp.delete_cookie(key="fitcast_oauth_redirect_uri", path="/")
     return redirect_resp

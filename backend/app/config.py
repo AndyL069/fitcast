@@ -41,6 +41,7 @@ class Settings:
     AUTHENTIK_CLIENT_SECRET: str = os.getenv("AUTHENTIK_CLIENT_SECRET", "")
     AUTHENTIK_ISSUER_URL: str = os.getenv("AUTHENTIK_ISSUER") or os.getenv("AUTHENTIK_ISSUER_URL", "")
     AUTHENTIK_REDIRECT_URI: str = os.getenv("AUTHENTIK_REDIRECT_URI", "")
+    AUTHENTIK_INTERNAL_URL: str = os.getenv("AUTHENTIK_INTERNAL_URL") or os.getenv("AUTHENTIK_BACKEND_URL", "")
 
     @property
     def authentik_enabled(self) -> bool:

@@ -48,13 +48,7 @@ const MainApp: React.FC = () => {
     const params = new URLSearchParams(window.location.search);
     const errorParam = params.get('auth_error');
     if (errorParam) {
-      if (errorParam === 'exchange_failed') {
-        setAuthErrorBanner('Authentik-Anmeldung fehlgeschlagen: Der Token-Austausch mit deinem Authentik-Server ist fehlgeschlagen. Bitte prüfe die Docker-Netzwerkverbindung zu auth.am-homelab.de.');
-      } else if (errorParam === 'invalid_state') {
-        setAuthErrorBanner('Authentik-Sitzung abgelaufen oder ungültig (State-Mismatch). Bitte versuche die Anmeldung erneut.');
-      } else {
-        setAuthErrorBanner(`Authentik-Fehler: ${errorParam}`);
-      }
+      setAuthErrorBanner(errorParam);
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, []);
