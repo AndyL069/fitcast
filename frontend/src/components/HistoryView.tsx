@@ -11,7 +11,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, loading }) =>
   const formatDate = (isoString: string) => {
     try {
       const date = new Date(isoString);
-      return date.toLocaleDateString(undefined, {
+      return date.toLocaleDateString('de-DE', {
         weekday: 'short',
         month: 'short',
         day: 'numeric',
@@ -22,10 +22,18 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, loading }) =>
     }
   };
 
+  const formalityLabels: Record<string, string> = {
+    casual: 'Freizeit',
+    smart_casual: 'Smart Casual',
+    formal: 'Formell',
+    athletic: 'Sportlich',
+    lounge: 'Homewear'
+  };
+
   if (loading) {
     return (
       <div className="bg-white/80 rounded-3xl p-12 text-center border border-slate-200 shadow-sm">
-        <p className="text-sm font-semibold text-slate-500">Loading outfit history...</p>
+        <p className="text-sm font-semibold text-slate-500">Outfit-Verlauf wird geladen...</p>
       </div>
     );
   }
@@ -36,9 +44,9 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, loading }) =>
         <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-4">
           <Calendar className="w-7 h-7" />
         </div>
-        <h3 className="text-lg font-bold text-slate-900">No outfit history yet</h3>
+        <h3 className="text-lg font-bold text-slate-900">Noch kein Outfit-Verlauf</h3>
         <p className="text-sm text-slate-500 max-w-sm mx-auto mt-1">
-          When you select "Wear This Today" on an outfit recommendation, your daily choices and the local weather will be tracked here.
+          Wenn du bei einer Outfit-Empfehlung auf „Heute anziehen“ klickst, wird deine getragene Auswahl samt Wetter hier festgehalten.
         </p>
       </div>
     );
@@ -47,8 +55,8 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, loading }) =>
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-base font-bold text-slate-900">Worn Outfit Log</h3>
-        <span className="text-xs text-slate-500 font-semibold">{history.length} Outfits Recorded</span>
+        <h3 className="text-base font-bold text-slate-900">Getragene Outfits</h3>
+        <span className="text-xs text-slate-500 font-semibold">{history.length} Outfits erfasst</span>
       </div>
 
       <div className="space-y-4">
@@ -65,7 +73,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, loading }) =>
                   {formatDate(record.created_at)}
                 </span>
                 <span className="capitalize text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
-                  {record.vibe}
+                  {formalityLabels[record.vibe] || record.vibe}
                 </span>
               </div>
 
@@ -95,7 +103,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, loading }) =>
                   <span className="text-xs font-bold text-slate-800 line-clamp-1">
                     {record.top.name}
                   </span>
-                  <span className="text-[10px] text-slate-400 font-semibold uppercase">Top</span>
+                  <span className="text-[10px] text-slate-400 font-semibold uppercase">Oberteil</span>
                 </div>
               )}
 
@@ -111,7 +119,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, loading }) =>
                   <span className="text-xs font-bold text-slate-800 line-clamp-1">
                     {record.pants.name}
                   </span>
-                  <span className="text-[10px] text-slate-400 font-semibold uppercase">Pants</span>
+                  <span className="text-[10px] text-slate-400 font-semibold uppercase">Hose</span>
                 </div>
               )}
 
@@ -127,7 +135,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ history, loading }) =>
                   <span className="text-xs font-bold text-slate-800 line-clamp-1">
                     {record.shoes.name}
                   </span>
-                  <span className="text-[10px] text-slate-400 font-semibold uppercase">Shoes</span>
+                  <span className="text-[10px] text-slate-400 font-semibold uppercase">Schuhe</span>
                 </div>
               )}
             </div>

@@ -5,26 +5,24 @@ from app.config import settings
 from app.models import ClothingItem
 from app.schemas import WeatherSummary
 
-# Color harmony palettes for rule-based scoring
-NEUTRALS = {"white", "black", "grey", "gray", "navy", "beige", "cream", "khaki", "brown", "tan", "denim"}
+NEUTRALS = {
+    "white", "weiß", "black", "schwarz", "grey", "gray", "grau", "navy", "dunkelblau", 
+    "beige", "cream", "creme", "khaki", "brown", "braun", "tan", "denim", "neutral"
+}
 
 def calculate_color_score(top_color: str, pants_color: str, shoes_color: str) -> float:
     t, p, s = top_color.lower(), pants_color.lower(), shoes_color.lower()
     score = 10.0
 
-    # If all items are identical non-neutral color (e.g. all red), penalize slightly for balance
     if t == p == s and t not in NEUTRALS:
         score -= 4.0
 
-    # Monochromatic neutral (all black / all navy) looks great
-    if t == p == s and t in {"black", "navy", "grey", "beige"}:
+    if t == p == s and t in {"black", "schwarz", "navy", "dunkelblau", "grey", "grau", "beige"}:
         score += 3.0
 
-    # Neutral pants (jeans, chinos) go with almost any top
     if p in NEUTRALS:
         score += 2.0
 
-    # Matching shoes to belt/top or neutral shoes
     if s in NEUTRALS or s == t:
         score += 2.0
 
@@ -43,35 +41,28 @@ def algorithmic_outfit_matching(
     target_warmth = weather.comfort_target
     target_vibe = vibe.lower() if vibe else "casual"
 
-    # Filter by locked items if specified
     cand_tops = [t for t in tops if t.id == locked_top_id] if locked_top_id else tops
     cand_pants = [p for p in pants if p.id == locked_pants_id] if locked_pants_id else pants
     cand_shoes = [s for s in shoes if s.id == locked_shoes_id] if locked_shoes_id else shoes
 
-    if not cand_tops:
-        cand_tops = tops
-    if not cand_pants:
-        cand_pants = pants
-    if not cand_shoes:
-        cand_shoes = shoes
+    if not cand_tops: cand_tops = tops
+    if not cand_pants: cand_pants = pants
+    if not cand_shoes: cand_shoes = shoes
 
     best_combination = None
     highest_score = -9999.0
 
-    # Evaluate each combination
     for top in cand_tops:
         for pant in cand_pants:
             for shoe in cand_shoes:
                 score = 50.0
 
-                # 1. Thermal comfort score (Penalize distance from target warmth)
                 top_diff = abs(top.warmth_level - target_warmth)
                 pant_diff = abs(pant.warmth_level - target_warmth)
                 shoe_diff = abs(shoe.warmth_level - target_warmth)
                 thermal_penalty = (top_diff * 4.0) + (pant_diff * 3.0) + (shoe_diff * 2.0)
                 score -= thermal_penalty
 
-                # 2. Rain & weather risk score
                 if weather.is_rainy or weather.is_snowy:
                     if shoe.waterproof:
                         score += 15.0
@@ -80,7 +71,6 @@ def algorithmic_outfit_matching(
                     if top.waterproof:
                         score += 8.0
 
-                # 3. Formality / Vibe alignment
                 if target_vibe != "all":
                     if top.formality == target_vibe:
                         score += 4.0
@@ -89,15 +79,11 @@ def algorithmic_outfit_matching(
                     if shoe.formality == target_vibe:
                         score += 4.0
 
-                # Avoid severe formality mismatch (e.g. formal shoes + athletic pants)
                 if (shoe.formality == "formal" and pant.formality in ("athletic", "lounge")) or \
                    (top.formality == "formal" and pant.formality == "athletic"):
                     score -= 15.0
 
-                # 4. Color harmony score
                 score += calculate_color_score(top.color, pant.color, shoe.color)
-
-                # Add a tiny random jitter so shuffling yields nice variations among high scorers
                 jitter = random.uniform(0.0, 1.5)
                 total_score = score + jitter
 
@@ -110,25 +96,24 @@ def algorithmic_outfit_matching(
 
     sel_top, sel_pants, sel_shoes = best_combination
 
-    # Build natural language stylist explanation
     temp_desc = f"{weather.temperature:.1f}°C"
     if weather.comfort_target >= 4:
-        weather_note = f"With cool/cold temperatures ({temp_desc}) and a comfort target of {weather.comfort_target}/5, we selected your warm {sel_top.name} and {sel_pants.name} for optimal insulation."
+        weather_note = f"Bei kühlen bis kalten Temperaturen ({temp_desc}) und einem Ziel-Wärmegrad von {weather.comfort_target}/5 ist die Kombination aus '{sel_top.name}' und '{sel_pants.name}' ideal für wohlige Wärme."
     elif weather.comfort_target <= 2:
-        weather_note = f"With warm temperatures ({temp_desc}) and sunny skies, your light {sel_top.name} and {sel_pants.name} will keep you cool and comfortable all day."
+        weather_note = f"Bei warmem Wetter ({temp_desc}) und Sonnenschein halten dich das leichte '{sel_top.name}' und '{sel_pants.name}' den ganzen Tag angenehm kühl."
     else:
-        weather_note = f"For today's pleasant {temp_desc} weather, this balanced pairing of {sel_top.name} with {sel_pants.name} gives you the perfect mid-weight comfort."
+        weather_note = f"Für das angenehme Wetter heute ({temp_desc}) bietet die ausgewogene Kombination aus '{sel_top.name}' und '{sel_pants.name}' optimalen Komfort."
 
     if (weather.is_rainy or weather.is_snowy) and sel_shoes.waterproof:
-        weather_note += " Plus, your waterproof footwear ensures your feet stay completely dry."
+        weather_note += " Dank der wasserdichten Schuhe bleiben deine Füße zudem trocken."
 
-    color_note = f"The {sel_top.color} top pairs effortlessly with {sel_pants.color} bottoms and {sel_shoes.color} shoes for a cohesive, stylish {vibe} aesthetic."
+    color_note = f"Die Farbharmonie ({sel_top.color} zu {sel_pants.color} und {sel_shoes.color}) erzeugt einen stimmigen und modernen Look."
 
     explanation = f"{weather_note} {color_note}"
     styling_tips = [
-        f"Pair with subtle accessories matching your {sel_shoes.color} shoes.",
-        "Roll sleeves or cuff ankles if you want a more relaxed silhouette.",
-        "Add an extra lightweight layer if venturing out in the late evening."
+        f"Kombiniere dezente Accessoires passend zu deinen {sel_shoes.color}en Schuhen.",
+        "Ärmel oder Hosenbund bei Bedarf leicht hochkrempeln für eine entspannte Silhouette.",
+        "Für den kühleren Abend empfiehlt sich eine leichte Übergangsjacke."
     ]
 
     fit_score = max(70, min(98, int(85 + (highest_score / 10))))
@@ -143,28 +128,25 @@ def algorithmic_outfit_matching(
     }
 
 async def analyze_clothing_image_with_ai(image_bytes: bytes, filename: str) -> Dict[str, Any]:
-    """
-    Uses Gemini Vision if API key is provided, or falls back to intelligent filename/default inference.
-    """
     if settings.GEMINI_API_KEY:
         try:
             from google import genai
             from google.genai import types
 
             client = genai.Client(api_key=settings.GEMINI_API_KEY)
-            prompt = """Analyze this clothing item photo.
-Return a valid JSON object matching this schema:
+            prompt = """Analysiere dieses Kleidungsstück-Foto.
+Gib ein valides JSON-Objekt auf Deutsch zurück:
 {
   "category": "top" | "pants" | "shoes",
-  "name": "Descriptive title (e.g. Navy Cable Knit Sweater)",
-  "color": "primary color",
-  "pattern": "solid | striped | plaid | floral | graphic | patterned",
-  "fabric": "cotton | wool | denim | leather | linen | synthetic | fleece",
-  "warmth_level": 1 to 5 (1=light summer tank/shorts, 3=medium shirt/chinos, 5=heavy winter parka/coat/boots),
+  "name": "Beschreibender deutscher Titel (z.B. Dunkelblauer Wollpullover)",
+  "color": "Farbe auf Deutsch (z.B. Dunkelblau, Weiß, Schwarz, Beige)",
+  "pattern": "einfarbig | gestreift | kariert | gemustert",
+  "fabric": "Baumwolle | Wolle | Denim | Leder | Leinen | Synthetik | Fleece",
+  "warmth_level": 1 bis 5 (1=sehr leichtes Sommerteil/Shorts, 3=mittelschweres Shirt/Chino, 5=schwerer Wintermantel/Stiefel),
   "formality": "casual | smart_casual | formal | athletic | lounge",
-  "waterproof": true or false
+  "waterproof": true oder false
 }
-Return ONLY valid JSON without markdown wrapping."""
+Antworte NUR mit reinem JSON ohne Markdown-Codeblöcke."""
 
             response = client.models.generate_content(
                 model="gemini-2.5-flash",
@@ -174,36 +156,33 @@ Return ONLY valid JSON without markdown wrapping."""
                 ]
             )
             text = response.text.strip()
-            if text.startswith("```json"):
-                text = text[7:]
-            if text.endswith("```"):
-                text = text[:-3]
+            if text.startswith("```json"): text = text[7:]
+            if text.endswith("```"): text = text[:-3]
             parsed = json.loads(text.strip())
             return parsed
         except Exception as e:
-            print(f"Gemini Vision API error (falling back): {e}")
+            print(f"Gemini Vision API error: {e}")
 
-    # Heuristic fallback based on filename or defaults
     name_lower = filename.lower()
-    if any(k in name_lower for k in ["pant", "jean", "trouser", "chino", "short", "skirt"]):
+    if any(k in name_lower for k in ["pant", "jean", "hose", "chino", "short"]):
         cat = "pants"
-        name = "Tailored Bottoms"
+        name = "Hose"
         warmth = 3
-    elif any(k in name_lower for k in ["shoe", "sneaker", "boot", "loafer", "sandal", "heel"]):
+    elif any(k in name_lower for k in ["shoe", "schuh", "sneaker", "boot", "stiefel"]):
         cat = "shoes"
-        name = "Classic Footwear"
+        name = "Schuhe"
         warmth = 2
     else:
         cat = "top"
-        name = "Casual Top"
+        name = "Oberteil"
         warmth = 2
 
     return {
         "category": cat,
         "name": name,
         "color": "neutral",
-        "pattern": "solid",
-        "fabric": "cotton",
+        "pattern": "einfarbig",
+        "fabric": "Baumwolle",
         "warmth_level": warmth,
         "formality": "casual",
         "waterproof": False
@@ -219,9 +198,6 @@ async def generate_outfit_with_ai(
     locked_pants_id: Optional[int] = None,
     locked_shoes_id: Optional[int] = None
 ) -> Dict[str, Any]:
-    """
-    Attempts AI Gemini styling with structured reasoning, or falls back to deterministic algorithmic matching.
-    """
     if settings.GEMINI_API_KEY and len(tops) > 0 and len(pants) > 0 and len(shoes) > 0:
         try:
             from google import genai
@@ -231,30 +207,30 @@ async def generate_outfit_with_ai(
             pants_catalog = [{"id": p.id, "name": p.name, "color": p.color, "warmth": p.warmth_level, "formality": p.formality} for p in pants]
             shoes_catalog = [{"id": s.id, "name": s.name, "color": s.color, "warmth": s.warmth_level, "formality": s.formality, "waterproof": s.waterproof} for s in shoes]
 
-            prompt = f"""You are an expert personal stylist.
-Current Weather Forecast:
-- Location: {weather.city}
-- Temperature: {weather.temperature}°C (Feels like: {weather.apparent_temperature}°C)
-- Condition: {weather.precipitation}mm precip, Rainy: {weather.is_rainy}, Snowy: {weather.is_snowy}
-- Target Warmth Level (1=hot, 5=freezing): {weather.comfort_target}
-- Target Vibe: {vibe}
+            prompt = f"""Du bist ein professioneller Personal Stylist.
+Aktuelle Wettervorhersage:
+- Ort: {weather.city}
+- Temperatur: {weather.temperature}°C (Gefühlt: {weather.apparent_temperature}°C)
+- Niederschlag: {weather.precipitation}mm, Regen: {weather.is_rainy}, Schnee: {weather.is_snowy}
+- Ziel-Wärmegrad (1=sehr leicht, 5=Winter): {weather.comfort_target}
+- Anlass/Vibe: {vibe}
 
-Available Tops: {json.dumps(top_catalog)}
-Available Pants: {json.dumps(pants_catalog)}
-Available Shoes: {json.dumps(shoes_catalog)}
-Locked Top ID: {locked_top_id}
-Locked Pants ID: {locked_pants_id}
-Locked Shoes ID: {locked_shoes_id}
+Verfügbare Oberteile: {json.dumps(top_catalog)}
+Verfügbare Hosen: {json.dumps(pants_catalog)}
+Verfügbare Schuhe: {json.dumps(shoes_catalog)}
+Festgesetztes Oberteil ID: {locked_top_id}
+Festgesetzte Hose ID: {locked_pants_id}
+Festgesetzte Schuhe ID: {locked_shoes_id}
 
-Select the single best combination of (1 Top, 1 Pant, 1 Shoe).
-Respond ONLY with a JSON object in this exact schema:
+Wähle die beste Kombination aus (1 Oberteil, 1 Hose, 1 Paar Schuhe).
+Antworte auf DEUTSCH mit einem JSON-Objekt in diesem Schema:
 {{
   "top_id": <int>,
   "pants_id": <int>,
   "shoes_id": <int>,
-  "explanation": "<2-3 engaging sentences explaining why this outfit is stylish and perfectly suited for today's weather>",
-  "styling_tips": ["<Tip 1>", "<Tip 2>"],
-  "weather_fit_score": <int between 80 and 99>
+  "explanation": "<2-3 ansprechende Sätze auf Deutsch, warum dieses Outfit modisch ist und perfekt zum heutigen Wetter passt>",
+  "styling_tips": ["<Tipp 1 auf Deutsch>", "<Tipp 2 auf Deutsch>"],
+  "weather_fit_score": <int zwischen 80 und 99>
 }}"""
 
             response = client.models.generate_content(
@@ -262,10 +238,8 @@ Respond ONLY with a JSON object in this exact schema:
                 contents=prompt
             )
             text = response.text.strip()
-            if text.startswith("```json"):
-                text = text[7:]
-            if text.endswith("```"):
-                text = text[:-3]
+            if text.startswith("```json"): text = text[7:]
+            if text.endswith("```"): text = text[:-3]
             parsed = json.loads(text.strip())
             
             sel_top = next((t for t in tops if t.id == parsed["top_id"]), tops[0])
@@ -276,14 +250,13 @@ Respond ONLY with a JSON object in this exact schema:
                 "top": sel_top,
                 "pants": sel_pants,
                 "shoes": sel_shoes,
-                "explanation": parsed.get("explanation", "Great outfit combination selected for today's forecast."),
-                "styling_tips": parsed.get("styling_tips", ["Pair with classic accessories."]),
+                "explanation": parsed.get("explanation", "Hervorragende Outfit-Kombination für die heutige Wetterlage."),
+                "styling_tips": parsed.get("styling_tips", ["Mit klassischen Accessoires kombinieren."]),
                 "fit_score": parsed.get("weather_fit_score", 92)
             }
         except Exception as e:
-            print(f"Gemini styling API error (using rule engine): {e}")
+            print(f"Gemini styling API error: {e}")
 
-    # Fallback to algorithmic matching engine
     return algorithmic_outfit_matching(
         tops=tops,
         pants=pants,

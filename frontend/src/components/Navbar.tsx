@@ -31,7 +31,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               FitCast
             </span>
             <span className="hidden sm:inline-block ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-200">
-              AI Stylist
+              KI-Stylist
             </span>
           </div>
         </div>
@@ -47,7 +47,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
           >
             <CloudSun className="w-4 h-4" />
-            <span>Today's Outfit</span>
+            <span>Heutiges Outfit</span>
           </button>
 
           <button
@@ -59,7 +59,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
           >
             <Shirt className="w-4 h-4" />
-            <span>My Closet</span>
+            <span>Mein Kleiderschrank</span>
             {itemsCount > 0 && (
               <span className="text-xs px-1.5 py-0.5 rounded-full bg-slate-200 text-slate-700">
                 {itemsCount}
@@ -76,7 +76,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
           >
             <Calendar className="w-4 h-4" />
-            <span className="hidden sm:inline">History</span>
+            <span className="hidden sm:inline">Verlauf</span>
           </button>
         </nav>
 
@@ -86,7 +86,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           className="flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-sm font-semibold shadow-md shadow-blue-600/25 transition-all duration-200"
         >
           <span className="text-lg leading-none">+</span>
-          <span className="hidden sm:inline">Add Clothes</span>
+          <span className="hidden sm:inline">Kleidung hinzufügen</span>
         </button>
 
       </div>

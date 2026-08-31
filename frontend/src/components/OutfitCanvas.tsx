@@ -21,6 +21,14 @@ export const OutfitCanvas: React.FC<OutfitCanvasProps> = ({
   lockedShoes,
   onToggleLock
 }) => {
+  const formalityLabels: Record<string, string> = {
+    casual: 'Freizeit',
+    smart_casual: 'Smart Casual',
+    formal: 'Formell',
+    athletic: 'Sportlich',
+    lounge: 'Homewear'
+  };
+
   const renderSlotCard = (
     item: ClothingItem,
     slot: 'top' | 'pants' | 'shoes',
@@ -47,17 +55,17 @@ export const OutfitCanvas: React.FC<OutfitCanvasProps> = ({
                 ? 'bg-amber-100 text-amber-900 border border-amber-300'
                 : 'bg-white text-slate-500 hover:text-slate-800 border border-slate-200 shadow-xs'
             }`}
-            title={isLocked ? 'Item locked during shuffle' : 'Lock item to keep it when shuffling'}
+            title={isLocked ? 'Teil ist beim Neumischen fixiert' : 'Teil fixieren, um es beim Neumischen beizubehalten'}
           >
             {isLocked ? (
               <>
                 <Lock className="w-3.5 h-3.5 text-amber-700" />
-                <span>Locked</span>
+                <span>Fixiert</span>
               </>
             ) : (
               <>
                 <Unlock className="w-3.5 h-3.5 text-slate-400" />
-                <span className="hidden sm:inline">Lock</span>
+                <span className="hidden sm:inline">Fixieren</span>
               </>
             )}
           </button>
@@ -78,13 +86,13 @@ export const OutfitCanvas: React.FC<OutfitCanvasProps> = ({
           <div className="absolute bottom-2.5 left-2.5 flex items-center gap-1.5">
             <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/90 backdrop-blur-xs text-amber-800 border border-slate-200/80 text-[11px] font-bold shadow-xs">
               <Flame className="w-3 h-3 text-amber-600 fill-amber-500" />
-              <span>Lvl {item.warmth_level}</span>
+              <span>Stufe {item.warmth_level}</span>
             </div>
 
             {item.waterproof && (
               <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-600/90 backdrop-blur-xs text-white text-[11px] font-bold shadow-xs">
                 <ShieldCheck className="w-3 h-3" />
-                <span>Waterproof</span>
+                <span>Wasserdicht</span>
               </div>
             )}
           </div>
@@ -106,7 +114,7 @@ export const OutfitCanvas: React.FC<OutfitCanvasProps> = ({
                 </span>
               )}
               <span className="capitalize text-slate-500">
-                • {item.formality.replace('_', ' ')}
+                • {formalityLabels[item.formality] || item.formality}
               </span>
             </div>
           </div>
@@ -118,9 +126,9 @@ export const OutfitCanvas: React.FC<OutfitCanvasProps> = ({
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
-      {renderSlotCard(top, 'top', lockedTop, 'Top Piece')}
-      {renderSlotCard(pants, 'pants', lockedPants, 'Pants / Bottoms')}
-      {renderSlotCard(shoes, 'shoes', lockedShoes, 'Footwear')}
+      {renderSlotCard(top, 'top', lockedTop, 'Oberteil')}
+      {renderSlotCard(pants, 'pants', lockedPants, 'Hose / Unterteil')}
+      {renderSlotCard(shoes, 'shoes', lockedShoes, 'Schuhe')}
     </div>
   );
 };

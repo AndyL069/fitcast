@@ -1,39 +1,39 @@
 from typing import Dict, Any, List
 import httpx
 
-# WMO Weather interpretation codes (WW)
+# WMO Weather interpretation codes (WW) in German
 WMO_CODES = {
-    0: ("Clear sky", False, False),
-    1: ("Mainly clear", False, False),
-    2: ("Partly cloudy", False, False),
-    3: ("Overcast", False, False),
-    45: ("Fog", False, False),
-    48: ("Depositing rime fog", False, False),
-    51: ("Light drizzle", True, False),
-    53: ("Moderate drizzle", True, False),
-    55: ("Dense drizzle", True, False),
-    61: ("Slight rain", True, False),
-    63: ("Moderate rain", True, False),
-    65: ("Heavy rain", True, False),
-    71: ("Slight snow fall", False, True),
-    73: ("Moderate snow fall", False, True),
-    75: ("Heavy snow fall", False, True),
-    77: ("Snow grains", False, True),
-    80: ("Slight rain showers", True, False),
-    81: ("Moderate rain showers", True, False),
-    82: ("Violent rain showers", True, False),
-    85: ("Slight snow showers", False, True),
-    86: ("Heavy snow showers", False, True),
-    95: ("Thunderstorm", True, False),
-    96: ("Thunderstorm with slight hail", True, True),
-    99: ("Thunderstorm with heavy hail", True, True),
+    0: ("Klarer Himmel", False, False),
+    1: ("Überwiegend klar", False, False),
+    2: ("Leicht bewölkt", False, False),
+    3: ("Bedeckt", False, False),
+    45: ("Nebel", False, False),
+    48: ("Raureif-Nebel", False, False),
+    51: ("Leichter Nieselregen", True, False),
+    53: ("Mäßiger Nieselregen", True, False),
+    55: ("Dichter Nieselregen", True, False),
+    61: ("Leichter Regen", True, False),
+    63: ("Mäßiger Regen", True, False),
+    65: ("Starker Regen", True, False),
+    71: ("Leichter Schneefall", False, True),
+    73: ("Mäßiger Schneefall", False, True),
+    75: ("Starker Schneefall", False, True),
+    77: ("Schneegriesel", False, True),
+    80: ("Leichte Regenschauer", True, False),
+    81: ("Mäßige Regenschauer", True, False),
+    82: ("Heftige Regenschauer", True, False),
+    85: ("Leichte Schneeschauer", False, True),
+    86: ("Starke Schneeschauer", False, True),
+    95: ("Gewitter", True, False),
+    96: ("Gewitter mit leichtem Hagel", True, True),
+    99: ("Gewitter mit schwerem Hagel", True, True),
 }
 
 def parse_weather_condition(code: int) -> Dict[str, Any]:
     if code in WMO_CODES:
         label, is_rainy, is_snowy = WMO_CODES[code]
     else:
-        label, is_rainy, is_snowy = ("Cloudy", False, False)
+        label, is_rainy, is_snowy = ("Bewölkt", False, False)
     return {
         "condition": label,
         "is_rainy": is_rainy,
@@ -42,12 +42,12 @@ def parse_weather_condition(code: int) -> Dict[str, Any]:
 
 def calculate_comfort_target(temp: float, apparent_temp: float) -> int:
     """
-    Calculates target warmth rating (1 to 5) for clothing selection based on apparent temperature.
-    1: Hot (>26C / >78F)
-    2: Warm / Mild (20-25C / 68-77F)
-    3: Moderate (13-19C / 55-67F)
-    4: Cool (6-12C / 42-54F)
-    5: Cold / Freezing (<6C / <42F)
+    Berechnet den Ziel-Wärmegrad (1 bis 5) für die Kleidungsauswahl basierend auf der gefühlten Temperatur.
+    1: Heiß (>26°C)
+    2: Warm / Mild (20-25°C)
+    3: Mäßig / Angenehm (13-19°C)
+    4: Kühl / Übergangsjacke (6-12°C)
+    5: Kalt / Wintermantel (<6°C)
     """
     effective_temp = apparent_temp if apparent_temp is not None else temp
     if effective_temp > 25.5:
@@ -110,7 +110,7 @@ async def fetch_weather_for_coords(lat: float, lon: float) -> Dict[str, Any]:
 
 async def search_city_geocoding(query: str) -> List[Dict[str, Any]]:
     url = "https://geocoding-api.open-meteo.com/v1/search"
-    params = {"name": query, "count": 5, "language": "en", "format": "json"}
+    params = {"name": query, "count": 5, "language": "de", "format": "json"}
 
     async with httpx.AsyncClient(timeout=8.0) as client:
         response = await client.get(url, params=params)

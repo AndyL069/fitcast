@@ -32,10 +32,10 @@ export const StylistNote: React.FC<StylistNoteProps> = ({
   };
 
   const vibes: { id: VibeType; label: string }[] = [
-    { id: 'casual', label: 'Casual' },
+    { id: 'casual', label: 'Freizeit' },
     { id: 'smart_casual', label: 'Smart Casual' },
-    { id: 'formal', label: 'Formal' },
-    { id: 'all', label: 'Any Vibe' }
+    { id: 'formal', label: 'Formell' },
+    { id: 'all', label: 'Jeder Anlass' }
   ];
 
   return (
@@ -49,10 +49,10 @@ export const StylistNote: React.FC<StylistNoteProps> = ({
           </div>
           <div>
             <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-              <span>AI Stylist Recommendation</span>
+              <span>KI-Stylist Empfehlung</span>
             </h3>
             <p className="text-xs text-slate-500">
-              Personalized color harmony & thermal analysis
+              Personalisierte Farbharmonie & Thermo-Analyse
             </p>
           </div>
         </div>
@@ -60,14 +60,14 @@ export const StylistNote: React.FC<StylistNoteProps> = ({
         {/* Fit Score Badge */}
         <div className="flex items-center gap-2 self-start sm:self-auto px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-extrabold shadow-xs">
           <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-          <span>{weatherFitScore}% Weather & Style Fit</span>
+          <span>{weatherFitScore}% Wetter- & Stil-Passung</span>
         </div>
       </div>
 
       {/* Vibe Selection */}
       <div className="my-4 flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
         <span className="text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
-          Vibe:
+          Anlass:
         </span>
         {vibes.map((v) => (
           <button
@@ -94,7 +94,7 @@ export const StylistNote: React.FC<StylistNoteProps> = ({
         <div className="mt-4 space-y-1.5">
           <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-500">
             <Lightbulb className="w-3.5 h-3.5 text-amber-500" />
-            <span>Styling Advice</span>
+            <span>Styling-Tipps</span>
           </div>
           <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-600">
             {stylingTips.map((tip, idx) => (
@@ -117,7 +117,7 @@ export const StylistNote: React.FC<StylistNoteProps> = ({
           className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 text-sm font-bold shadow-xs active:scale-95 transition-all duration-200 disabled:opacity-50"
         >
           <Shuffle className={`w-4 h-4 text-blue-600 ${loading ? 'animate-spin' : ''}`} />
-          <span>Shuffle / Another Combo</span>
+          <span>Neu mischen / Andere Kombination</span>
         </button>
 
         {/* Wear this today */}
@@ -133,12 +133,12 @@ export const StylistNote: React.FC<StylistNoteProps> = ({
           {wornSaved ? (
             <>
               <CheckCircle2 className="w-4 h-4" />
-              <span>Logged to Outfit History!</span>
+              <span>Im Verlauf gespeichert!</span>
             </>
           ) : (
             <>
               <Shirt className="w-4 h-4" />
-              <span>Wear This Today</span>
+              <span>Heute anziehen</span>
               <ArrowRight className="w-4 h-4 ml-1 opacity-80" />
             </>
           )}

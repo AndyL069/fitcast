@@ -9,15 +9,23 @@ interface ItemCardProps {
 
 export const ItemCard: React.FC<ItemCardProps> = ({ item, onDelete }) => {
   const categoryLabels = {
-    top: 'Top',
-    pants: 'Pants',
-    shoes: 'Shoes'
+    top: 'Oberteil',
+    pants: 'Hose',
+    shoes: 'Schuhe'
   };
 
   const categoryColors = {
     top: 'bg-indigo-50 text-indigo-700 border-indigo-200',
     pants: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     shoes: 'bg-amber-50 text-amber-700 border-amber-200'
+  };
+
+  const formalityLabels: Record<string, string> = {
+    casual: 'Freizeit',
+    smart_casual: 'Smart Casual',
+    formal: 'Formell',
+    athletic: 'Sportlich',
+    lounge: 'Homewear'
   };
 
   return (
@@ -29,7 +37,6 @@ export const ItemCard: React.FC<ItemCardProps> = ({ item, onDelete }) => {
           alt={item.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           onError={(e) => {
-            // fallback placeholder
             (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=500&auto=format&fit=crop&q=80';
           }}
         />
@@ -41,7 +48,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({ item, onDelete }) => {
 
         {/* Waterproof indicator */}
         {item.waterproof && (
-          <span className="absolute top-2.5 right-2.5 bg-blue-600/90 text-white p-1 rounded-full shadow-xs" title="Waterproof / Rain-resistant">
+          <span className="absolute top-2.5 right-2.5 bg-blue-600/90 text-white p-1 rounded-full shadow-xs" title="Wasserdicht / Regenfest">
             <ShieldCheck className="w-3.5 h-3.5" />
           </span>
         )}
@@ -50,7 +57,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({ item, onDelete }) => {
         <button
           onClick={() => onDelete(item.id)}
           className="absolute bottom-2.5 right-2.5 p-2 bg-white/90 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-xl shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-200 active:scale-90"
-          title="Delete item"
+          title="Kleidungsstück löschen"
         >
           <Trash2 className="w-4 h-4" />
         </button>
@@ -72,14 +79,14 @@ export const ItemCard: React.FC<ItemCardProps> = ({ item, onDelete }) => {
               </span>
             )}
             <span className="capitalize text-slate-500">
-              • {item.formality.replace('_', ' ')}
+              • {formalityLabels[item.formality] || item.formality}
             </span>
           </div>
         </div>
 
         {/* Warmth scale */}
         <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs">
-          <span className="text-slate-500 font-medium">Warmth Level:</span>
+          <span className="text-slate-500 font-medium">Wärmegrad:</span>
           <div className="flex items-center gap-0.5 text-amber-500">
             {[1, 2, 3, 4, 5].map((lvl) => (
               <Flame

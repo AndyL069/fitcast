@@ -42,7 +42,7 @@ export const App: React.FC = () => {
       const data = await api.getItems();
       setItems(data);
     } catch (err) {
-      console.error('Failed to load items', err);
+      console.error('Kleidung konnte nicht geladen werden', err);
     }
   };
 
@@ -53,7 +53,7 @@ export const App: React.FC = () => {
       const data = await api.getCurrentWeather(lat, lon, city);
       setWeather(data);
     } catch (err) {
-      console.error('Failed to load weather', err);
+      console.error('Wetterdaten konnten nicht geladen werden', err);
     } finally {
       setWeatherLoading(false);
     }
@@ -84,7 +84,7 @@ export const App: React.FC = () => {
       });
       setOutfit(res);
     } catch (err) {
-      console.error('Failed to recommend outfit', err);
+      console.error('Outfit-Empfehlung fehlgeschlagen', err);
     } finally {
       setOutfitLoading(false);
     }
@@ -97,7 +97,7 @@ export const App: React.FC = () => {
       const data = await api.getHistory();
       setHistory(data);
     } catch (err) {
-      console.error('Failed to load history', err);
+      console.error('Verlauf konnte nicht geladen werden', err);
     } finally {
       setHistoryLoading(false);
     }
@@ -113,13 +113,12 @@ export const App: React.FC = () => {
           const newCoords = {
             lat: pos.coords.latitude,
             lon: pos.coords.longitude,
-            city: 'Current Location'
+            city: 'Aktueller Standort'
           };
           setCoords(newCoords);
           loadWeather(newCoords.lat, newCoords.lon, newCoords.city);
         },
         () => {
-          // fallback default
           loadWeather(52.52, 13.405, 'Berlin');
         }
       );
@@ -128,7 +127,6 @@ export const App: React.FC = () => {
     }
   }, []);
 
-  // When weather or items change, regenerate outfit if needed
   useEffect(() => {
     if (weather && items.length >= 3 && !outfit) {
       loadOutfit(weather);
@@ -149,18 +147,18 @@ export const App: React.FC = () => {
 
   const handleItemAdded = (item: ClothingItem) => {
     setItems((prev) => [item, ...prev]);
-    setOutfit(null); // Reset outfit to trigger new recommendation with new piece
+    setOutfit(null);
   };
 
   const handleDeleteItem = async (id: number) => {
-    if (!confirm('Are you sure you want to remove this piece from your closet?')) return;
+    if (!confirm('Möchtest du dieses Kleidungsstück wirklich aus deinem Schrank entfernen?')) return;
     try {
       await api.deleteItem(id);
       setItems((prev) => prev.filter((i) => i.id !== id));
       setOutfit(null);
     } catch (err) {
       console.error(err);
-      alert('Failed to delete item');
+      alert('Löschen fehlgeschlagen.');
     }
   };
 
@@ -172,7 +170,7 @@ export const App: React.FC = () => {
       setOutfit(null);
     } catch (err) {
       console.error(err);
-      alert('Failed to seed sample items');
+      alert('Beispiel-Garderobe konnte nicht geladen werden.');
     } finally {
       setSeeding(false);
     }
@@ -189,7 +187,7 @@ export const App: React.FC = () => {
         ai_explanation: outfit.ai_explanation,
       });
     } catch (err) {
-      console.error('Failed to log worn outfit', err);
+      console.error('Getragenes Outfit konnte nicht protokolliert werden', err);
     }
   };
 
@@ -252,7 +250,7 @@ export const App: React.FC = () => {
 
       {/* Footer */}
       <footer className="border-t border-slate-200/80 bg-white/50 backdrop-blur-xs py-6 mt-12 text-center text-xs text-slate-500 font-medium">
-        <p>FitCast • Powered by Open-Meteo & Gemini Multimodal AI</p>
+        <p>FitCast • Angetrieben von Open-Meteo & Gemini Multimodal KI</p>
       </footer>
 
     </div>

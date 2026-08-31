@@ -22,8 +22,8 @@ export const UploadModal: React.FC<UploadModalProps> = ({
   // Form Fields
   const [category, setCategory] = useState<CategoryType>('top');
   const [name, setName] = useState('');
-  const [color, setColor] = useState('neutral');
-  const [fabric, setFabric] = useState('cotton');
+  const [color, setColor] = useState('Neutral');
+  const [fabric, setFabric] = useState('Baumwolle');
   const [warmthLevel, setWarmthLevel] = useState(3);
   const [formality, setFormality] = useState('casual');
   const [waterproof, setWaterproof] = useState(false);
@@ -50,7 +50,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
         if (analysis.formality) setFormality(analysis.formality);
         if (analysis.waterproof !== undefined) setWaterproof(analysis.waterproof);
       } catch (err) {
-        console.error('AI Auto-tag failed, falling back to manual entry', err);
+        console.error('AI Auto-tagging fehlgeschlagen, manuelle Eingabe aktiv', err);
       } finally {
         setAnalyzing(false);
       }
@@ -66,7 +66,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
       const formData = new FormData();
       if (file) formData.append('image', file);
       formData.append('category', category);
-      formData.append('name', name || `${color} ${category}`);
+      formData.append('name', name || `${color} ${category === 'top' ? 'Oberteil' : category === 'pants' ? 'Hose' : 'Schuhe'}`);
       formData.append('color', color);
       formData.append('fabric', fabric);
       formData.append('warmth_level', String(warmthLevel));
@@ -78,7 +78,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
       handleClose();
     } catch (err) {
       console.error(err);
-      alert('Failed to save clothing item.');
+      alert('Kleidungsstück konnte nicht gespeichert werden.');
     } finally {
       setSubmitting(false);
     }
@@ -88,8 +88,8 @@ export const UploadModal: React.FC<UploadModalProps> = ({
     setFile(null);
     setPreviewUrl(null);
     setName('');
-    setColor('neutral');
-    setFabric('cotton');
+    setColor('Neutral');
+    setFabric('Baumwolle');
     setWarmthLevel(3);
     setWaterproof(false);
     onClose();
@@ -105,7 +105,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
             <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
               <Upload className="w-4 h-4" />
             </div>
-            <h3 className="text-lg font-bold text-slate-900">Add Clothing Item</h3>
+            <h3 className="text-lg font-bold text-slate-900">Kleidungsstück hinzufügen</h3>
           </div>
           <button
             onClick={handleClose}
@@ -138,13 +138,13 @@ export const UploadModal: React.FC<UploadModalProps> = ({
               <div className="relative aspect-video max-h-48 mx-auto rounded-xl overflow-hidden shadow-xs">
                 <img
                   src={previewUrl}
-                  alt="Upload preview"
+                  alt="Vorschau"
                   className="w-full h-full object-contain"
                 />
                 {analyzing && (
                   <div className="absolute inset-0 bg-blue-900/60 backdrop-blur-xs flex flex-col items-center justify-center text-white text-sm font-semibold gap-2">
                     <Sparkles className="w-6 h-6 animate-spin text-amber-300" />
-                    <span>AI Vision scanning & auto-tagging...</span>
+                    <span>KI-Vision scannt und verschlagwortet automatisch...</span>
                   </div>
                 )}
               </div>
@@ -155,10 +155,10 @@ export const UploadModal: React.FC<UploadModalProps> = ({
                 </div>
                 <div>
                   <p className="text-sm font-bold text-slate-800">
-                    Upload a photo of your top, pants, or shoes
+                    Lade ein Foto von deinem Oberteil, deiner Hose oder Schuhen hoch
                   </p>
                   <p className="text-xs text-slate-400 mt-0.5">
-                    JPG, PNG, WEBP • Multimodal AI will auto-detect category and warmth
+                    JPG, PNG, WEBP • KI erkennt automatisch Kategorie, Farbe und Wärmegrad
                   </p>
                 </div>
               </div>
@@ -168,21 +168,25 @@ export const UploadModal: React.FC<UploadModalProps> = ({
           {/* Category Tabs */}
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-              Category
+              Kategorie
             </label>
             <div className="grid grid-cols-3 gap-2">
-              {(['top', 'pants', 'shoes'] as CategoryType[]).map((cat) => (
+              {[
+                { id: 'top' as CategoryType, label: 'Oberteil' },
+                { id: 'pants' as CategoryType, label: 'Hose' },
+                { id: 'shoes' as CategoryType, label: 'Schuhe' }
+              ].map((cat) => (
                 <button
-                  key={cat}
+                  key={cat.id}
                   type="button"
-                  onClick={() => setCategory(cat)}
+                  onClick={() => setCategory(cat.id)}
                   className={`py-2 px-3 rounded-xl text-sm font-bold capitalize transition-all duration-200 border ${
-                    category === cat
+                    category === cat.id
                       ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
                       : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
                   }`}
                 >
-                  {cat}
+                  {cat.label}
                 </button>
               ))}
             </div>
@@ -191,12 +195,12 @@ export const UploadModal: React.FC<UploadModalProps> = ({
           {/* Name / Title */}
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-              Item Title / Description
+              Titel / Bezeichnung
             </label>
             <input
               type="text"
               required
-              placeholder="e.g. Navy Cable Knit Sweater"
+              placeholder="z.B. Dunkelblauer Merinowoll-Pullover"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"
@@ -207,25 +211,25 @@ export const UploadModal: React.FC<UploadModalProps> = ({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                Primary Color
+                Hauptfarbe
               </label>
               <input
                 type="text"
                 value={color}
                 onChange={(e) => setColor(e.target.value)}
-                placeholder="e.g. Navy, Black, White"
+                placeholder="z.B. Dunkelblau, Weiß, Schwarz"
                 className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"
               />
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                Fabric Material
+                Material / Stoff
               </label>
               <input
                 type="text"
                 value={fabric}
                 onChange={(e) => setFabric(e.target.value)}
-                placeholder="e.g. Wool, Cotton, Denim"
+                placeholder="z.B. Wolle, Baumwolle, Denim"
                 className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"
               />
             </div>
@@ -236,14 +240,14 @@ export const UploadModal: React.FC<UploadModalProps> = ({
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-1.5 text-xs font-bold text-amber-900 uppercase tracking-wider">
                 <Flame className="w-4 h-4 text-amber-600 fill-amber-500" />
-                <span>Warmth Level: {warmthLevel} / 5</span>
+                <span>Wärmegrad: {warmthLevel} / 5</span>
               </div>
               <span className="text-xs font-semibold text-amber-800">
-                {warmthLevel === 1 && 'Ultra Light (Summer tank / shorts)'}
-                {warmthLevel === 2 && 'Light (T-shirt / light sneakers)'}
-                {warmthLevel === 3 && 'Medium (Shirt / Jeans / Chinos)'}
-                {warmthLevel === 4 && 'Warm (Sweater / Boots / Jacket)'}
-                {warmthLevel === 5 && 'Heavy Winter (Parka / Insulated boots)'}
+                {warmthLevel === 1 && 'Sehr leicht (Sommer-Top / Shorts)'}
+                {warmthLevel === 2 && 'Leicht (T-Shirt / leichte Sneaker)'}
+                {warmthLevel === 3 && 'Mäßig (Hemd / Jeans / Chino)'}
+                {warmthLevel === 4 && 'Warm (Pullover / Stiefel / Jacke)'}
+                {warmthLevel === 5 && 'Sehr warm / Winter (Mantel / Gefütterte Boots)'}
               </span>
             </div>
             <input
@@ -261,18 +265,18 @@ export const UploadModal: React.FC<UploadModalProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                Formality Style
+                Stil / Anlass
               </label>
               <select
                 value={formality}
                 onChange={(e) => setFormality(e.target.value)}
                 className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="casual">Casual (Daily)</option>
-                <option value="smart_casual">Smart Casual (Office / Dinner)</option>
-                <option value="formal">Formal / Elegant</option>
-                <option value="athletic">Athletic / Workout</option>
-                <option value="lounge">Loungewear / Cozy</option>
+                <option value="casual">Freizeit (Alltag)</option>
+                <option value="smart_casual">Smart Casual (Büro / Ausgehen)</option>
+                <option value="formal">Formell / Elegant</option>
+                <option value="athletic">Sportlich / Aktiv</option>
+                <option value="lounge">Homewear / Gemütlich</option>
               </select>
             </div>
 
@@ -285,7 +289,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
                   className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
                 />
                 <Shield className="w-4 h-4 text-blue-500" />
-                <span>Waterproof / Rain-resistant</span>
+                <span>Wasserdicht / Regenfest</span>
               </label>
             </div>
           </div>
@@ -297,17 +301,17 @@ export const UploadModal: React.FC<UploadModalProps> = ({
               onClick={handleClose}
               className="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
             >
-              Cancel
+              Abbrechen
             </button>
             <button
               type="submit"
               disabled={submitting || (!file && !previewUrl)}
               className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-sm font-bold shadow-md shadow-blue-600/25 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {submitting ? 'Saving...' : (
+              {submitting ? 'Wird gespeichert...' : (
                 <>
                   <Check className="w-4 h-4" />
-                  <span>Save to Closet</span>
+                  <span>Im Kleiderschrank speichern</span>
                 </>
               )}
             </button>

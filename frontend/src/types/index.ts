@@ -9,7 +9,7 @@ export interface ClothingItem {
   secondary_colors?: string;
   pattern: string;
   fabric: string;
-  warmth_level: number; // 1 to 5
+  warmth_level: number; // 1 bis 5
   formality: string;
   waterproof: boolean;
   created_at: string;

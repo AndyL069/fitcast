@@ -14,18 +14,18 @@ def test_comfort_target_mapping():
     assert calculate_comfort_target(2.0, -1.0) == 5
 
 def test_parse_weather_condition():
-    # Code 0 = Clear Sky
+    # Code 0 = Klarer Himmel
     cond_clear = parse_weather_condition(0)
-    assert cond_clear["condition"] == "Clear sky"
+    assert "klar" in cond_clear["condition"].lower() or "himmel" in cond_clear["condition"].lower()
     assert cond_clear["is_rainy"] is False
     assert cond_clear["is_snowy"] is False
 
-    # Code 61 = Slight rain
+    # Code 61 = Leichter Regen
     cond_rain = parse_weather_condition(61)
-    assert "rain" in cond_rain["condition"].lower()
+    assert "regen" in cond_rain["condition"].lower()
     assert cond_rain["is_rainy"] is True
 
-    # Code 71 = Snow fall
+    # Code 71 = Leichter Schneefall
     cond_snow = parse_weather_condition(71)
-    assert "snow" in cond_snow["condition"].lower()
+    assert "schnee" in cond_snow["condition"].lower()
     assert cond_snow["is_snowy"] is True

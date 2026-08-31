@@ -67,16 +67,16 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({
   const getWarmthLevelBadge = (target: number) => {
     const labels = [
       '',
-      'Ultra Light (Summer)',
+      'Sehr leicht (Sommer)',
       'Mild & Warm',
-      'Moderate (Layering)',
-      'Cool & Crisp (Jacket)',
-      'Cold / Winter (Coat)'
+      'Mäßig (Übergangswetter)',
+      'Kühl (Jacke empfohlen)',
+      'Kalt / Winter (Warmer Mantel)'
     ];
     return (
       <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-xs font-semibold">
         <Flame className="w-3.5 h-3.5 text-amber-600 fill-amber-500" />
-        <span>Target Warmth: Level {target}/5 — {labels[target]}</span>
+        <span>Ziel-Wärmegrad: Stufe {target}/5 — {labels[target]}</span>
       </div>
     );
   };
@@ -91,7 +91,7 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({
             className="flex items-center gap-1.5 text-sm font-semibold text-slate-800 hover:text-blue-600 px-2 py-1 rounded-lg hover:bg-slate-100 transition-colors"
           >
             <MapPin className="w-4 h-4 text-blue-600" />
-            <span>{weather?.city || 'Detecting Location...'}</span>
+            <span>{weather?.city || 'Standort wird ermittelt...'}</span>
             <Search className="w-3.5 h-3.5 text-slate-400 ml-1" />
           </button>
         </div>
@@ -117,7 +117,7 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({
             onClick={onRefresh}
             disabled={loading}
             className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors"
-            title="Refresh forecast"
+            title="Wettervorhersage aktualisieren"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
@@ -130,7 +130,7 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({
           <form onSubmit={handleSearch} className="flex gap-2">
             <input
               type="text"
-              placeholder="Search city (e.g. London, Tokyo, New York)..."
+              placeholder="Stadt suchen (z.B. Berlin, Wien, Zürich, München)..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="flex-1 px-3 py-1.5 text-sm bg-white rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -141,7 +141,7 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({
               disabled={isSearching}
               className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-700"
             >
-              {isSearching ? 'Searching...' : 'Search'}
+              {isSearching ? 'Suche...' : 'Suchen'}
             </button>
           </form>
 
@@ -180,7 +180,7 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({
                   {formatTemp(weather.temperature)}
                 </span>
                 <span className="text-sm font-medium text-slate-500">
-                  Feels like {formatTemp(weather.apparent_temperature)}
+                  Gefühlt {formatTemp(weather.apparent_temperature)}
                 </span>
               </div>
               <p className="text-sm font-semibold text-slate-700 mt-0.5">
@@ -193,7 +193,7 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({
           <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600 sm:border-l sm:border-slate-200 sm:pl-5">
             <div className="flex items-center gap-1.5">
               <Droplets className="w-4 h-4 text-blue-500" />
-              <span>{Math.round(weather.precipitation_probability || 0)}% Rain Chance</span>
+              <span>{Math.round(weather.precipitation_probability || 0)}% Regen</span>
             </div>
             {weather.wind_speed !== undefined && (
               <div className="flex items-center gap-1.5">
@@ -206,7 +206,7 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({
         </div>
       ) : (
         <div className="h-16 flex items-center justify-center text-slate-400 text-sm">
-          Loading current weather forecast...
+          Wetterdaten werden geladen...
         </div>
       )}
     </div>

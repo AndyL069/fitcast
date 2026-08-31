@@ -4,15 +4,14 @@ from app.schemas import WeatherSummary
 from app.services.ai_service import algorithmic_outfit_matching
 
 def test_algorithmic_matching_cold_weather():
-    # Warm items
-    top_warm = ClothingItem(id=1, category="top", name="Heavy Wool Knit", warmth_level=5, color="navy", formality="casual")
-    top_light = ClothingItem(id=2, category="top", name="Linen Tank Top", warmth_level=1, color="white", formality="casual")
+    top_warm = ClothingItem(id=1, category="top", name="Schwerer Strickpullover", warmth_level=5, color="dunkelblau", formality="casual")
+    top_light = ClothingItem(id=2, category="top", name="Leinen-Top", warmth_level=1, color="weiß", formality="casual")
 
-    pants_warm = ClothingItem(id=3, category="pants", name="Lined Corduroy Pants", warmth_level=5, color="brown", formality="casual")
-    pants_light = ClothingItem(id=4, category="pants", name="Cotton Shorts", warmth_level=1, color="beige", formality="casual")
+    pants_warm = ClothingItem(id=3, category="pants", name="Gefütterte Cordhose", warmth_level=5, color="braun", formality="casual")
+    pants_light = ClothingItem(id=4, category="pants", name="Baumwoll-Shorts", warmth_level=1, color="beige", formality="casual")
 
-    shoes_warm = ClothingItem(id=5, category="shoes", name="Winter Boots", warmth_level=5, color="black", waterproof=True, formality="casual")
-    shoes_light = ClothingItem(id=6, category="shoes", name="Sandals", warmth_level=1, color="tan", waterproof=False, formality="casual")
+    shoes_warm = ClothingItem(id=5, category="shoes", name="Winterstiefel", warmth_level=5, color="schwarz", waterproof=True, formality="casual")
+    shoes_light = ClothingItem(id=6, category="shoes", name="Sandalen", warmth_level=1, color="tan", waterproof=False, formality="casual")
 
     weather_cold = WeatherSummary(
         temperature=2.0,
@@ -21,7 +20,7 @@ def test_algorithmic_matching_cold_weather():
         weather_code=71,
         is_snowy=True,
         comfort_target=5,
-        city="Munich"
+        city="München"
     )
 
     result = algorithmic_outfit_matching(
@@ -35,17 +34,17 @@ def test_algorithmic_matching_cold_weather():
     assert result["top"].id == 1
     assert result["pants"].id == 3
     assert result["shoes"].id == 5
-    assert "cold" in result["explanation"].lower() or "warmth" in result["explanation"].lower()
+    assert "wärme" in result["explanation"].lower() or "kalt" in result["explanation"].lower() or "kühl" in result["explanation"].lower()
 
 def test_algorithmic_matching_hot_weather():
-    top_warm = ClothingItem(id=1, category="top", name="Heavy Wool Knit", warmth_level=5, color="navy", formality="casual")
-    top_light = ClothingItem(id=2, category="top", name="Linen Shirt", warmth_level=1, color="white", formality="casual")
+    top_warm = ClothingItem(id=1, category="top", name="Schwerer Strickpullover", warmth_level=5, color="dunkelblau", formality="casual")
+    top_light = ClothingItem(id=2, category="top", name="Leinenhemd", warmth_level=1, color="weiß", formality="casual")
 
-    pants_warm = ClothingItem(id=3, category="pants", name="Lined Corduroy Pants", warmth_level=5, color="brown", formality="casual")
-    pants_light = ClothingItem(id=4, category="pants", name="Linen Shorts", warmth_level=1, color="beige", formality="casual")
+    pants_warm = ClothingItem(id=3, category="pants", name="Gefütterte Cordhose", warmth_level=5, color="braun", formality="casual")
+    pants_light = ClothingItem(id=4, category="pants", name="Leinen-Shorts", warmth_level=1, color="beige", formality="casual")
 
-    shoes_warm = ClothingItem(id=5, category="shoes", name="Winter Boots", warmth_level=5, color="black", formality="casual")
-    shoes_light = ClothingItem(id=6, category="shoes", name="Canvas Espadrilles", warmth_level=1, color="tan", formality="casual")
+    shoes_warm = ClothingItem(id=5, category="shoes", name="Winterstiefel", warmth_level=5, color="schwarz", formality="casual")
+    shoes_light = ClothingItem(id=6, category="shoes", name="Espadrilles", warmth_level=1, color="tan", formality="casual")
 
     weather_hot = WeatherSummary(
         temperature=31.0,
@@ -53,7 +52,7 @@ def test_algorithmic_matching_hot_weather():
         precipitation=0.0,
         weather_code=0,
         comfort_target=1,
-        city="Rome"
+        city="Rom"
     )
 
     result = algorithmic_outfit_matching(

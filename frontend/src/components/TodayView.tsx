@@ -118,35 +118,35 @@ export const TodayView: React.FC<TodayViewProps> = ({
         <div className="bg-white/80 rounded-3xl p-16 text-center border border-slate-200 shadow-sm flex flex-col items-center justify-center gap-3">
           <Sparkles className="w-10 h-10 text-blue-600 animate-spin" />
           <p className="text-base font-bold text-slate-800">
-            Styling your perfect outfit for today's weather...
+            Dein perfektes Outfit für das heutige Wetter wird zusammengestellt...
           </p>
           <p className="text-xs text-slate-400">
-            Evaluating warmth ratings, color combinations, and forecast conditions
+            Wärmegrad, Farbharmonie und Wetterlage werden analysiert
           </p>
         </div>
       ) : (
-        /* Incomplete Wardrobe Warning & Fast Setup Card */
+        /* Incomplete Wardrobe Warning */
         <div className="bg-white/80 backdrop-blur-md rounded-3xl p-8 sm:p-10 border border-slate-200 shadow-sm text-center">
           <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto mb-4 border border-amber-200">
             <AlertCircle className="w-7 h-7" />
           </div>
           <h3 className="text-lg font-bold text-slate-900">
-            Complete your wardrobe to unlock today's outfit
+            Vervollständige deinen Kleiderschrank für Empfehlungen
           </h3>
           <p className="text-sm text-slate-500 max-w-md mx-auto mt-1.5 mb-6">
-            FitCast needs at least 1 Top, 1 Pair of Pants, and 1 Pair of Shoes to generate a complete matching outfit.
+            FitCast benötigt mindestens 1 Oberteil, 1 Hose und 1 Paar Schuhe, um passende Outfits zusammenzustellen.
           </p>
 
           {/* Checklist */}
           <div className="flex justify-center items-center gap-3 sm:gap-6 mb-8 text-xs font-bold">
             <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border ${topCount > 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>
-              <span>Tops: {topCount}</span>
+              <span>Oberteile: {topCount}</span>
             </div>
             <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border ${pantsCount > 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>
-              <span>Pants: {pantsCount}</span>
+              <span>Hosen: {pantsCount}</span>
             </div>
             <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border ${shoesCount > 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>
-              <span>Shoes: {shoesCount}</span>
+              <span>Schuhe: {shoesCount}</span>
             </div>
           </div>
 
@@ -156,7 +156,7 @@ export const TodayView: React.FC<TodayViewProps> = ({
               className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold shadow-md shadow-blue-600/25 active:scale-95 transition-all duration-200"
             >
               <Plus className="w-4 h-4" />
-              <span>Upload Photos</span>
+              <span>Kleidung hochladen</span>
             </button>
 
             <button
@@ -165,7 +165,7 @@ export const TodayView: React.FC<TodayViewProps> = ({
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-sm font-bold active:scale-95 transition-all duration-200"
             >
               <Sparkles className="w-4 h-4 text-indigo-600" />
-              <span>{seeding ? 'Loading Sample Closet...' : 'Load Sample Wardrobe (13 Items)'}</span>
+              <span>{seeding ? 'Lade Beispiel-Garderobe...' : 'Beispiel-Garderobe laden (13 Teile)'}</span>
             </button>
           </div>
         </div>
