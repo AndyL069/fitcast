@@ -55,15 +55,21 @@ def get_optional_user(request: Request, db: Session = Depends(get_db)) -> Option
     except HTTPException:
         return None
 
-def set_auth_cookie(response: Response, user_id: int, email: str):
+def set_auth_cookie(response: Response, user_id: int, email: str, request: Optional[Request] = None):
     token = create_access_token({"user_id": user_id, "email": email})
+    is_secure = False
+    if request:
+        proto = request.headers.get("x-forwarded-proto", request.url.scheme)
+        if proto.lower() == "https":
+            is_secure = True
+
     response.set_cookie(
         key=settings.COOKIE_NAME,
         value=token,
         httponly=True,
         max_age=settings.ACCESS_TOKEN_EXPIRE_DAYS * 24 * 3600,
         samesite="lax",
-        secure=False,
+        secure=is_secure,
         path="/"
     )
 
@@ -75,7 +81,7 @@ def get_redirect_uri(request: Request) -> str:
     return f"{proto}://{host}/api/auth/callback/authentik"
 
 @router.post("/register", response_model=UserResponse)
-def register_user(payload: UserCreate, response: Response, db: Session = Depends(get_db)):
+def register_user(payload: UserCreate, request: Request, response: Response, db: Session = Depends(get_db)):
     existing_user = db.query(User).filter(User.email == payload.email.lower()).first()
     if existing_user:
         raise HTTPException(
@@ -94,11 +100,11 @@ def register_user(payload: UserCreate, response: Response, db: Session = Depends
     db.commit()
     db.refresh(new_user)
 
-    set_auth_cookie(response, new_user.id, new_user.email)
+    set_auth_cookie(response, new_user.id, new_user.email, request=request)
     return new_user
 
 @router.post("/login", response_model=UserResponse)
-def login_user(payload: UserLogin, response: Response, db: Session = Depends(get_db)):
+def login_user(payload: UserLogin, request: Request, response: Response, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == payload.email.lower()).first()
     if not user or not user.hashed_password:
         raise HTTPException(
@@ -112,7 +118,7 @@ def login_user(payload: UserLogin, response: Response, db: Session = Depends(get
             detail="Ungültige E-Mail-Adresse oder Passwort."
         )
 
-    set_auth_cookie(response, user.id, user.email)
+    set_auth_cookie(response, user.id, user.email, request=request)
     return user
 
 @router.post("/logout")
@@ -143,6 +149,9 @@ async def authentik_login(request: Request, response: Response):
     redirect_uri = get_redirect_uri(request)
     auth_url = authentik_service.build_authorization_url(redirect_uri=redirect_uri, state=state)
 
+    proto = request.headers.get("x-forwarded-proto", request.url.scheme)
+    is_secure = proto.lower() == "https"
+
     resp = RedirectResponse(url=auth_url, status_code=status.HTTP_302_FOUND)
     resp.set_cookie(
         key="fitcast_oauth_state",
@@ -150,6 +159,7 @@ async def authentik_login(request: Request, response: Response):
         httponly=True,
         max_age=600,
         samesite="lax",
+        secure=is_secure,
         path="/"
     )
     return resp
@@ -209,6 +219,6 @@ async def authentik_callback(
         db.refresh(user)
 
     redirect_resp = RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
-    set_auth_cookie(redirect_resp, user.id, user.email)
+    set_auth_cookie(redirect_resp, user.id, user.email, request=request)
     redirect_resp.delete_cookie(key="fitcast_oauth_state", path="/")
     return redirect_resp

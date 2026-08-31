@@ -14,6 +14,7 @@ import { ClosetView } from './components/ClosetView';
 import { HistoryView } from './components/HistoryView';
 import { UploadModal } from './components/UploadModal';
 import { AuthModal } from './components/AuthModal';
+import { AlertCircle, X } from 'lucide-react';
 
 const MainApp: React.FC = () => {
   const { user } = useAuth();
@@ -23,6 +24,7 @@ const MainApp: React.FC = () => {
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [seeding, setSeeding] = useState(false);
+  const [authErrorBanner, setAuthErrorBanner] = useState<string | null>(null);
 
   // Weather state
   const [weather, setWeather] = useState<WeatherData | null>(null);
@@ -40,6 +42,22 @@ const MainApp: React.FC = () => {
   // History state
   const [history, setHistory] = useState<OutfitHistoryItem[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+
+  // Detect OAuth redirect error
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const errorParam = params.get('auth_error');
+    if (errorParam) {
+      if (errorParam === 'exchange_failed') {
+        setAuthErrorBanner('Authentik-Anmeldung fehlgeschlagen: Der Token-Austausch mit deinem Authentik-Server ist fehlgeschlagen. Bitte prüfe die Docker-Netzwerkverbindung zu auth.am-homelab.de.');
+      } else if (errorParam === 'invalid_state') {
+        setAuthErrorBanner('Authentik-Sitzung abgelaufen oder ungültig (State-Mismatch). Bitte versuche die Anmeldung erneut.');
+      } else {
+        setAuthErrorBanner(`Authentik-Fehler: ${errorParam}`);
+      }
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
 
   // Fetch Wardrobe Items
   const loadItems = useCallback(async () => {
@@ -208,6 +226,24 @@ const MainApp: React.FC = () => {
         onOpenAuth={() => setAuthModalOpen(true)}
         itemsCount={items.length}
       />
+
+      {/* Auth Error Banner if redirected with error */}
+      {authErrorBanner && (
+        <div className="max-w-6xl w-full mx-auto px-4 sm:px-6 pt-4">
+          <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl flex items-center justify-between text-rose-800 text-sm shadow-xs">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
+              <span>{authErrorBanner}</span>
+            </div>
+            <button
+              onClick={() => setAuthErrorBanner(null)}
+              className="p-1 text-rose-400 hover:text-rose-700 rounded-lg hover:bg-rose-100 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Main Content Body */}
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
