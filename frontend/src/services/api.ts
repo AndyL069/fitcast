@@ -202,4 +202,12 @@ export const api = {
     if (!res.ok) throw new Error('Verlauf konnte nicht geladen werden');
     return res.json();
   },
+
+  async deleteHistoryEntry(id: number): Promise<void> {
+    const res = await fetch(`${API_BASE}/outfit/history/${id}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+    if (!res.ok) throw new Error('Verlaufseintrag konnte nicht gelöscht werden');
+  },
 };

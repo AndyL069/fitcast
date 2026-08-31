@@ -255,6 +255,16 @@ const MainApp: React.FC = () => {
     }
   };
 
+  const handleDeleteHistoryEntry = async (id: number) => {
+    try {
+      await api.deleteHistoryEntry(id);
+      setHistory((prev) => prev.filter((h) => h.id !== id));
+    } catch (err) {
+      console.error('Verlaufseintrag konnte nicht gelöscht werden', err);
+      alert('Löschen fehlgeschlagen.');
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       
@@ -321,6 +331,7 @@ const MainApp: React.FC = () => {
           <HistoryView
             history={history}
             loading={historyLoading}
+            onDeleteEntry={handleDeleteHistoryEntry}
           />
         )}
       </main>

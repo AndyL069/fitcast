@@ -102,6 +102,24 @@ def log_worn_outfit(
     db.refresh(history)
     return {"message": "Outfit erfolgreich im Verlauf gespeichert", "id": history.id}
 
+@router.delete("/outfit/history/{history_id}")
+def delete_history_entry(
+    history_id: int,
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_optional_user)
+):
+    entry = db.query(OutfitHistory).filter(OutfitHistory.id == history_id).first()
+    if not entry:
+        raise HTTPException(status_code=404, detail="Verlaufseintrag nicht gefunden")
+    # Ownership check
+    if current_user and entry.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Keine Berechtigung")
+    if not current_user and entry.user_id is not None:
+        raise HTTPException(status_code=403, detail="Keine Berechtigung")
+    db.delete(entry)
+    db.commit()
+    return {"message": "Verlaufseintrag gelöscht"}
+
 @router.get("/outfit/history")
 def get_outfit_history(
     limit: int = 10,
