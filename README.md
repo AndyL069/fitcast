@@ -5,6 +5,9 @@ FitCast is an AI-powered personal stylist and digital wardrobe web application. 
 ---
 
 ## ✨ Key Features
+- 👥 **Multi-User Management & Isolation:** Individual user accounts with private wardrobe galleries and distinct outfit histories.
+- 🔐 **Secure Authentication:** Local email/password registration with salted bcrypt hashing and JWT tokens transmitted via `HttpOnly` secure cookies.
+- 🛡️ **Authentik SSO (OIDC):** Single Sign-On with Authentik OpenID Connect (OIDC) when configured via environment variables.
 - 📸 **Photo Upload & Multimodal Auto-Tagging:** Drop in photos of your tops, pants, or shoes. Gemini Vision automatically detects the item category, primary/secondary colors, fabric type, estimated warmth level (1–5), and rain resistance.
 - ☀️ **Real-Time Weather Comfort Scoring:** Sourced automatically via browser geolocation or global city search with Open-Meteo. Maps temperatures and precipitation into target warmth ratings and rain protection needs.
 - 🎯 **Daily Outfit Hero Canvas:** Visualizes the recommended top, bottom, and shoes in a clean layout with an AI Stylist explanation note and styling tips.
@@ -29,6 +32,27 @@ Then open **http://localhost:8000** in your browser.
 - **Stop container:** `docker compose down`
 - **View logs:** `docker compose logs -f`
 - **Data Persistence:** Uploaded photos (`./backend/uploads`) and SQLite database (`fitcast_data` volume) are persisted across restarts.
+
+---
+
+## 🔑 Authentication & Authentik Configuration
+
+### Local Auth:
+Works out-of-the-box with no configuration required.
+
+### Authentik OIDC SSO (Optional):
+To enable the **"Mit Authentik anmelden"** button, set the following environment variables in `docker-compose.yml` or your `.env` file:
+
+```bash
+# JWT Secret Key
+SECRET_KEY="dein-sicherer-geheimer-schluessel"
+
+# Authentik OIDC Settings
+AUTHENTIK_CLIENT_ID="fitcast-client-id"
+AUTHENTIK_CLIENT_SECRET="fitcast-client-secret"
+AUTHENTIK_ISSUER_URL="https://authentik.company.local/application/o/fitcast/"
+AUTHENTIK_REDIRECT_URI="http://localhost:8000/api/auth/authentik/callback"
+```
 
 ---
 
@@ -73,7 +97,7 @@ $env:PYTHONPATH="."
 
 ---
 
-## 🔑 Optional Configuration
+## 🔑 Optional AI Configuration
 To enable live Gemini Multimodal Vision photo scanning, set your Gemini API key in `backend/.env` or as an environment variable:
 ```bash
 GEMINI_API_KEY="your-gemini-api-key"
