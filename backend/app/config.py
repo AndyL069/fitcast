@@ -17,9 +17,14 @@ if custom_static:
 else:
     STATIC_DIR = BASE_DIR / "static"
 
+raw_db_url = os.getenv("DATABASE_URL", f"sqlite:///{BASE_DIR}/fitcast.db")
+# Normalize postgres:// to postgresql:// for SQLAlchemy
+if raw_db_url.startswith("postgres://"):
+    raw_db_url = raw_db_url.replace("postgres://", "postgresql://", 1)
+
 class Settings:
     PROJECT_NAME: str = "FitCast API"
-    DATABASE_URL: str = os.getenv("DATABASE_URL", f"sqlite:///{BASE_DIR}/fitcast.db")
+    DATABASE_URL: str = raw_db_url
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
     UPLOADS_DIR: Path = UPLOADS_DIR
     STATIC_DIR: Path = STATIC_DIR

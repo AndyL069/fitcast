@@ -6,6 +6,7 @@ FitCast is an AI-powered personal stylist and digital wardrobe web application. 
 
 ## ✨ Key Features
 - 👥 **Multi-User Management & Isolation:** Individual user accounts with private wardrobe galleries and distinct outfit histories.
+- 🐘 **PostgreSQL & SQLite Support:** Runs seamlessly with your existing PostgreSQL database or self-contained SQLite.
 - 🔐 **Secure Authentication:** Local email/password registration with salted bcrypt hashing and JWT tokens transmitted via `HttpOnly` secure cookies.
 - 🛡️ **Authentik SSO (OIDC):** Single Sign-On with Authentik OpenID Connect (OIDC) when configured via environment variables.
 - 📸 **Photo Upload & Multimodal Auto-Tagging:** Drop in photos of your tops, pants, or shoes. Gemini Vision automatically detects the item category, primary/secondary colors, fabric type, estimated warmth level (1–5), and rain resistance.
@@ -38,6 +39,9 @@ services:
     environment:
       SECRET_KEY: ${SECRET_KEY:-ein-sehr-geheimer-schluessel-12345}
       
+      # Datenbank: PostgreSQL (oder SQLite als Fallback)
+      DATABASE_URL: ${DATABASE_URL:-sqlite:////app/data/fitcast.db}
+      
       # Optional: Gemini KI-Vision
       GEMINI_API_KEY: ${GEMINI_API_KEY}
       
@@ -48,7 +52,6 @@ services:
       AUTHENTIK_REDIRECT_URI: ${AUTHENTIK_REDIRECT_URI}
       
       # Pfade
-      DATABASE_URL: sqlite:////app/data/fitcast.db
       UPLOADS_DIR: /app/uploads
       STATIC_DIR: /app/static
     volumes:
@@ -60,13 +63,14 @@ volumes:
   fitcast_data:
 ```
 
-4. Unter **Environment variables** in Portainer kannst du nun bequem deine Variablen definieren:
-   - `SECRET_KEY`
-   - `AUTHENTIK_CLIENT_ID`
-   - `AUTHENTIK_CLIENT_SECRET`
-   - `AUTHENTIK_ISSUER`
-   - `AUTHENTIK_REDIRECT_URI`
-   - `GEMINI_API_KEY` (optional)
+4. Unter **Environment variables** in Portainer kannst du nun deine Variablen definieren:
+   - `DATABASE_URL` ➔ `postgresql://user:password@postgres-host:5432/fitcast`
+   - `SECRET_KEY` ➔ `dein-geheimer-schluessel`
+   - `AUTHENTIK_CLIENT_ID` ➔ `fitcast`
+   - `AUTHENTIK_CLIENT_SECRET` ➔ `dein-authentik-secret`
+   - `AUTHENTIK_ISSUER` ➔ `https://authentik.deinedomain.de/application/o/fitcast/`
+   - `AUTHENTIK_REDIRECT_URI` ➔ `https://fitcast.deinedomain.de/api/auth/authentik/callback`
+   - `GEMINI_API_KEY` *(optional)*
 5. Klicke auf **Deploy the stack**.
 6. Öffne **http://<your-server-ip>:3004** in deinem Browser.
 
@@ -74,44 +78,13 @@ volumes:
 
 ## 🐳 Docker Deployment (Local Build)
 
-Run the entire full-stack application (frontend + backend + database) in a single command using Docker Compose:
+Run the entire full-stack application in a single command using Docker Compose:
 
 ```bash
 docker compose up -d --build
 ```
 
 Then open **http://localhost:3004** in your browser.
-
----
-
-## 🚀 Local Development (Without Docker)
-
-### Method 1: Single-Click Launcher (Windows)
-Run from the project root:
-```powershell
-.\start.ps1
-```
-*(or double-click `start.bat`)*
-
----
-
-### Method 2: Manual Start
-
-#### 1. Backend:
-```powershell
-cd backend
-python -m venv venv
-.\venv\Scripts\pip.exe install -r requirements.txt
-.\venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000
-```
-
-#### 2. Frontend:
-```powershell
-cd frontend
-npm.cmd install
-npm.cmd run dev
-```
-Open **http://localhost:3000** in your browser.
 
 ---
 
