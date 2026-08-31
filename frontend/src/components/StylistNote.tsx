@@ -10,6 +10,7 @@ interface StylistNoteProps {
   onChangeVibe: (vibe: VibeType) => void;
   onShuffle: () => void;
   onWearToday: () => void;
+  onOpenInspire: () => void;
   loading: boolean;
 }
 
@@ -21,6 +22,7 @@ export const StylistNote: React.FC<StylistNoteProps> = ({
   onChangeVibe,
   onShuffle,
   onWearToday,
+  onOpenInspire,
   loading
 }) => {
   const [wornSaved, setWornSaved] = useState(false);
@@ -110,21 +112,33 @@ export const StylistNote: React.FC<StylistNoteProps> = ({
       {/* Action Buttons */}
       <div className="mt-6 pt-4 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-3">
         
-        {/* Shuffle */}
-        <button
-          onClick={onShuffle}
-          disabled={loading}
-          className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 text-sm font-bold shadow-xs active:scale-95 transition-all duration-200 disabled:opacity-50"
-        >
-          <Shuffle className={`w-4 h-4 text-blue-600 ${loading ? 'animate-spin' : ''}`} />
-          <span>Neu mischen / Andere Kombination</span>
-        </button>
+        {/* Left buttons group */}
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+          {/* Shuffle */}
+          <button
+            onClick={onShuffle}
+            disabled={loading}
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 text-xs sm:text-sm font-bold shadow-xs active:scale-95 transition-all duration-200 disabled:opacity-50 cursor-pointer"
+          >
+            <Shuffle className={`w-4 h-4 text-blue-600 ${loading ? 'animate-spin' : ''}`} />
+            <span>Neu mischen</span>
+          </button>
+
+          {/* Inspire & Matches */}
+          <button
+            onClick={onOpenInspire}
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-violet-50 to-indigo-50 hover:from-violet-100 hover:to-indigo-100 text-indigo-900 border border-indigo-200/80 text-xs sm:text-sm font-bold shadow-xs active:scale-95 transition-all duration-200 cursor-pointer group"
+          >
+            <Sparkles className="w-4 h-4 text-violet-600 group-hover:rotate-12 transition-transform" />
+            <span>Alternativen & Shopping-Tipps</span>
+          </button>
+        </div>
 
         {/* Wear this today */}
         <button
           onClick={handleWear}
           disabled={wornSaved}
-          className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-2xl text-white text-sm font-bold shadow-md active:scale-95 transition-all duration-200 ${
+          className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 rounded-2xl text-white text-xs sm:text-sm font-bold shadow-md active:scale-95 transition-all duration-200 cursor-pointer ${
             wornSaved
               ? 'bg-emerald-600 shadow-emerald-600/25'
               : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-blue-600/25'

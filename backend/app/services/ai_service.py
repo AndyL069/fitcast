@@ -339,3 +339,166 @@ Antworte auf DEUTSCH mit einem JSON-Objekt in diesem Schema:
         locked_shoes_id=locked_shoes_id,
         locked_jacket_id=locked_jacket_id
     )
+
+async def generate_match_suggestions_with_ai(
+    current_top: ClothingItem,
+    current_pants: ClothingItem,
+    current_shoes: ClothingItem,
+    weather: WeatherSummary,
+    other_items: List[ClothingItem],
+    current_jacket: Optional[ClothingItem] = None,
+    vibe: str = "casual"
+) -> Dict[str, Any]:
+    """
+    Analysiert das aktuelle Outfit und liefert:
+    1. Passende Alternativen aus dem vorhandenen Kleiderschrank (z.B. alternatives Oberteil / Schuhe).
+    2. Konkrete Shopping-/Erweiterungsvorschläge (z.B. Accessoires, Schals, besondere Kleidungsstücke).
+    """
+    current_outfit_desc = {
+        "Oberteil": f"{current_top.name} ({current_top.color}, {current_top.fabric}, Wärmegrad {current_top.warmth_level})",
+        "Hose": f"{current_pants.name} ({current_pants.color}, {current_pants.fabric}, Wärmegrad {current_pants.warmth_level})",
+        "Schuhe": f"{current_shoes.name} ({current_shoes.color}, {current_shoes.fabric})",
+        "Jacke": f"{current_jacket.name} ({current_jacket.color})" if current_jacket else "Keine"
+    }
+
+    available_catalog = [
+        {
+            "id": it.id,
+            "category": it.category,
+            "name": it.name,
+            "color": it.color,
+            "fabric": it.fabric,
+            "warmth": it.warmth_level,
+            "formality": it.formality
+        }
+        for it in other_items
+    ]
+
+    closet_alternatives = []
+    shopping_suggestions = []
+    stylist_summary = "Hier sind passende Ergänzungen und Styling-Alternativen für diesen Look."
+
+    if settings.GEMINI_API_KEY:
+        try:
+            from google import genai
+            from google.genai import types
+
+            client = genai.Client(api_key=settings.GEMINI_API_KEY)
+
+            prompt = f"""Du bist Cher Horowitz, professionelle Stylistin aus 'Clueless'.
+Ein Nutzer liebt dieses aktuelle Outfit und möchte Alternativen aus seinem Schrank sowie neue Shopping-Ideen erhalten:
+
+Aktuelles Outfit:
+{json.dumps(current_outfit_desc, ensure_ascii=False, indent=2)}
+
+Wetter: {weather.city}, {weather.temperature}°C (Gefühlt: {weather.apparent_temperature}°C), {weather.condition}, Anlass/Vibe: {vibe}
+
+Weitere verfügbare Teile im Kleiderschrank des Nutzers:
+{json.dumps(available_catalog, ensure_ascii=False, indent=2)}
+
+Aufgaben:
+1. 'closet_alternatives': Wähle 2 bis 4 Teile aus den verfügbaren Schrank-Teilen aus, die als Alternative für eines der aktuellen Teile (z.B. anderes Oberteil, andere Schuhe oder andere Jacke) extrem stylisch zu den restlichen Teilen passen würden. Gib die item_id, die Kategorie, die es ersetzt ('top', 'pants', 'shoes', 'jacket') und eine prägnante Begründung auf Deutsch an.
+2. 'shopping_suggestions': Schlage 2 bis 3 konkrete neue Teile oder Accessoires vor (z.B. 'Camel Wollschal', 'Cognacbrauner Ledergürtel', 'Oversized Blazer in Anthrazit'), die das Outfit ideal abrunden oder variieren würden. Gib Titel, Kategorie ('Accessoire', 'Oberteil', 'Jacke', 'Schuhe'), empfohlene Farbe, prägnante Begründung ('why') und einen optimalen deutschen Google-Shopping Suchbegriff ('search_query') an.
+3. 'stylist_summary': 1-2 charmante Sätze im Stylisten-Ton über das Potenzial dieses Looks.
+
+Antworte ausschließlich im JSON-Format:
+{{
+  "stylist_summary": "...",
+  "closet_alternatives": [
+    {{
+      "item_id": <int aus verfügbaren Teilen>,
+      "replaces_category": "<top | pants | shoes | jacket>",
+      "reason": "<Begründung auf Deutsch>"
+    }}
+  ],
+  "shopping_suggestions": [
+    {{
+      "title": "<Produktbezeichnung>",
+      "category": "<Kategorie>",
+      "color": "<Farbe>",
+      "why": "<Warum es passt>",
+      "search_query": "<Suchbegriff für Shopping-Suche>"
+    }}
+  ]
+}}"""
+
+            config_kwargs: Dict[str, Any] = {"response_mime_type": "application/json"}
+            try:
+                config_kwargs["thinking_config"] = types.ThinkingConfig(thinking_budget=0)
+            except Exception:
+                pass
+            config = types.GenerateContentConfig(**config_kwargs)
+
+            response = client.models.generate_content(
+                model=settings.GEMINI_MODEL,
+                contents=prompt,
+                config=config
+            )
+            text = response.text.strip()
+            if text.startswith("```json"): text = text[7:]
+            if text.endswith("```"): text = text[:-3]
+            parsed = json.loads(text.strip())
+
+            stylist_summary = parsed.get("stylist_summary", stylist_summary)
+
+            for alt in parsed.get("closet_alternatives", []):
+                matching_item = next((it for it in other_items if it.id == alt.get("item_id")), None)
+                if matching_item:
+                    closet_alternatives.append({
+                        "item": matching_item,
+                        "replaces_category": alt.get("replaces_category", matching_item.category),
+                        "reason": alt.get("reason", "Harmoniert wunderbar mit den restlichen Teilen.")
+                    })
+
+            for shop in parsed.get("shopping_suggestions", []):
+                if shop.get("title"):
+                    shopping_suggestions.append({
+                        "title": shop.get("title"),
+                        "category": shop.get("category", "Accessoire"),
+                        "color": shop.get("color", "neutral"),
+                        "why": shop.get("why", "Ergänzt den Look perfekt."),
+                        "search_query": shop.get("search_query", shop.get("title"))
+                    })
+
+            return {
+                "closet_alternatives": closet_alternatives,
+                "shopping_suggestions": shopping_suggestions,
+                "stylist_summary": stylist_summary
+            }
+        except Exception as e:
+            print(f"Error generating match suggestions with Gemini: {e}")
+
+    # Fallback if AI call fails or no API key
+    if other_items:
+        sample_alt = other_items[:3]
+        for it in sample_alt:
+            closet_alternatives.append({
+                "item": it,
+                "replaces_category": it.category,
+                "reason": f"Passt durch die Farbe {it.color} und den Stil vielseitig zu deinem Look."
+            })
+
+    if not shopping_suggestions:
+        shopping_suggestions = [
+            {
+                "title": f"Passender Ledergürtel in {current_shoes.color}",
+                "category": "Accessoire",
+                "color": current_shoes.color,
+                "why": "Ein farblich auf die Schuhe abgestimmter Gürtel schafft eine saubere visuelle Linie.",
+                "search_query": f"Ledergürtel {current_shoes.color}"
+            },
+            {
+                "title": "Klassischer Schal / Tuch",
+                "category": "Accessoire",
+                "color": "Neutral",
+                "why": "Verleiht dem Outfit zusätzliche Textur und Tiefe bei kühlerem Wetter.",
+                "search_query": "Wollschal klassisch neutral"
+            }
+        ]
+
+    return {
+        "closet_alternatives": closet_alternatives,
+        "shopping_suggestions": shopping_suggestions,
+        "stylist_summary": stylist_summary
+    }
+

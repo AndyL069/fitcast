@@ -7,10 +7,18 @@ from app.models import ClothingItem, OutfitHistory, User
 from app.schemas import (
     OutfitRecommendRequest,
     OutfitRecommendResponse,
+    MatchSuggestionRequest,
+    MatchSuggestionsResponse,
+    ClosetAlternativeItem,
+    ShoppingSuggestionItem,
     ClothingItemResponse,
     WeatherSummary
 )
-from app.services.ai_service import generate_outfit_with_ai, analyze_clothing_image_with_ai
+from app.services.ai_service import (
+    generate_outfit_with_ai, 
+    analyze_clothing_image_with_ai,
+    generate_match_suggestions_with_ai
+)
 from app.routes.auth import get_optional_user
 
 router = APIRouter(prefix="/api", tags=["outfit"])
@@ -76,6 +84,67 @@ async def recommend_outfit(
         ai_explanation=outfit_res["explanation"],
         styling_tips=outfit_res.get("styling_tips", []),
         weather_fit_score=outfit_res.get("fit_score", 90)
+    )
+
+@router.post("/outfit/match-suggestions", response_model=MatchSuggestionsResponse)
+async def get_match_suggestions(
+    payload: MatchSuggestionRequest,
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_optional_user)
+):
+    query = db.query(ClothingItem)
+    if current_user:
+        query = query.filter(ClothingItem.user_id == current_user.id)
+    else:
+        query = query.filter(ClothingItem.user_id == None)
+
+    all_items = query.all()
+    
+    current_top = next((it for it in all_items if it.id == payload.current_top_id), None)
+    current_pants = next((it for it in all_items if it.id == payload.current_pants_id), None)
+    current_shoes = next((it for it in all_items if it.id == payload.current_shoes_id), None)
+    current_jacket = next((it for it in all_items if it.id == payload.current_jacket_id), None) if payload.current_jacket_id else None
+
+    if not current_top or not current_pants or not current_shoes:
+        raise HTTPException(status_code=404, detail="Aktuelle Outfit-Teile nicht in der Garderobe gefunden")
+
+    # Exclude current outfit items from available options
+    current_ids = {current_top.id, current_pants.id, current_shoes.id}
+    if current_jacket:
+        current_ids.add(current_jacket.id)
+
+    other_items = [it for it in all_items if it.id not in current_ids]
+
+    res = await generate_match_suggestions_with_ai(
+        current_top=current_top,
+        current_pants=current_pants,
+        current_shoes=current_shoes,
+        current_jacket=current_jacket,
+        other_items=other_items,
+        weather=payload.weather,
+        vibe=payload.vibe or "casual"
+    )
+
+    return MatchSuggestionsResponse(
+        closet_alternatives=[
+            ClosetAlternativeItem(
+                item=ClothingItemResponse.model_validate(alt["item"]),
+                replaces_category=alt["replaces_category"],
+                reason=alt["reason"]
+            )
+            for alt in res["closet_alternatives"]
+        ],
+        shopping_suggestions=[
+            ShoppingSuggestionItem(
+                title=shop["title"],
+                category=shop["category"],
+                color=shop["color"],
+                why=shop["why"],
+                search_query=shop["search_query"]
+            )
+            for shop in res["shopping_suggestions"]
+        ],
+        stylist_summary=res["stylist_summary"]
     )
 
 @router.post("/outfit/wear")

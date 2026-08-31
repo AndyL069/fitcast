@@ -99,3 +99,28 @@ class OutfitRecommendResponse(BaseModel):
     ai_explanation: str
     styling_tips: List[str]
     weather_fit_score: int
+
+class MatchSuggestionRequest(BaseModel):
+    current_top_id: int
+    current_pants_id: int
+    current_shoes_id: int
+    current_jacket_id: Optional[int] = None
+    weather: WeatherSummary
+    vibe: Optional[str] = "casual"
+
+class ClosetAlternativeItem(BaseModel):
+    item: ClothingItemResponse
+    replaces_category: str  # top, pants, shoes, jacket
+    reason: str
+
+class ShoppingSuggestionItem(BaseModel):
+    title: str
+    category: str
+    color: str
+    why: str
+    search_query: str
+
+class MatchSuggestionsResponse(BaseModel):
+    closet_alternatives: List[ClosetAlternativeItem]
+    shopping_suggestions: List[ShoppingSuggestionItem]
+    stylist_summary: str

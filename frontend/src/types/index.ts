@@ -78,3 +78,23 @@ export interface OutfitHistoryItem {
 }
 
 export type VibeType = 'casual' | 'smart_casual' | 'formal' | 'athletic' | 'all';
+
+export interface ClosetAlternativeItem {
+  item: ClothingItem;
+  replaces_category: CategoryType;
+  reason: string;
+}
+
+export interface ShoppingSuggestionItem {
+  title: string;
+  category: string;
+  color: string;
+  why: string;
+  search_query: string;
+}
+
+export interface MatchSuggestionsResponse {
+  closet_alternatives: ClosetAlternativeItem[];
+  shopping_suggestions: ShoppingSuggestionItem[];
+  stylist_summary: string;
+}

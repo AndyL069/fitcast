@@ -4,6 +4,7 @@ import {
   CitySearchResult, 
   OutfitRecommendation, 
   OutfitHistoryItem,
+  MatchSuggestionsResponse,
   User,
   ProvidersResponse
 } from '../types';
@@ -210,5 +211,26 @@ export const api = {
       credentials: 'include',
     });
     if (!res.ok) throw new Error('Verlaufseintrag konnte nicht gelöscht werden');
+  },
+
+  async getMatchSuggestions(params: {
+    current_top_id: number;
+    current_pants_id: number;
+    current_shoes_id: number;
+    current_jacket_id?: number | null;
+    weather: WeatherData;
+    vibe?: string;
+  }): Promise<MatchSuggestionsResponse> {
+    const res = await fetch(`${API_BASE}/outfit/match-suggestions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params),
+      credentials: 'include',
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'Vorschläge konnten nicht geladen werden' }));
+      throw new Error(err.detail || 'Vorschläge konnten nicht geladen werden');
+    }
+    return res.json();
   },
 };

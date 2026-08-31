@@ -4,7 +4,8 @@ import {
   WeatherData, 
   OutfitRecommendation, 
   OutfitHistoryItem, 
-  VibeType 
+  VibeType,
+  CategoryType
 } from './types';
 import { api } from './services/api';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -14,6 +15,7 @@ import { ClosetView } from './components/ClosetView';
 import { HistoryView } from './components/HistoryView';
 import { UploadModal } from './components/UploadModal';
 import { EditItemModal } from './components/EditItemModal';
+import { OutfitInspireModal } from './components/OutfitInspireModal';
 import { AuthModal } from './components/AuthModal';
 import { AlertCircle, X } from 'lucide-react';
 
@@ -24,6 +26,7 @@ const MainApp: React.FC = () => {
   const [items, setItems] = useState<ClothingItem[]>([]);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [inspireModalOpen, setInspireModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ClothingItem | null>(null);
   const [seeding, setSeeding] = useState(false);
   const [authErrorBanner, setAuthErrorBanner] = useState<string | null>(null);
@@ -203,6 +206,17 @@ const MainApp: React.FC = () => {
     });
   };
 
+  const handleSwapOutfitItem = (item: ClothingItem, replacesCategory: CategoryType) => {
+    setOutfit((curr) => {
+      if (!curr) return null;
+      if (replacesCategory === 'top') return { ...curr, top: item };
+      if (replacesCategory === 'pants') return { ...curr, pants: item };
+      if (replacesCategory === 'shoes') return { ...curr, shoes: item };
+      if (replacesCategory === 'jacket') return { ...curr, jacket: item };
+      return curr;
+    });
+  };
+
   const handleDeleteItem = async (id: number) => {
     if (!confirm('Möchtest du dieses Kleidungsstück wirklich aus deinem Schrank entfernen?')) return;
     try {
@@ -311,6 +325,7 @@ const MainApp: React.FC = () => {
               loadOutfit(weather, vibe, topId, pantsId, shoesId, jacketId, includeJacket ?? false)
             }
             onWearToday={handleWearToday}
+            onOpenInspire={() => setInspireModalOpen(true)}
             items={items}
             onOpenUpload={() => setUploadModalOpen(true)}
             onSeedSampleWardrobe={handleSeedSampleWardrobe}
@@ -351,6 +366,15 @@ const MainApp: React.FC = () => {
         isOpen={Boolean(editingItem)}
         onClose={() => setEditingItem(null)}
         onItemUpdated={handleItemUpdated}
+      />
+
+      {/* Outfit Inspire / Match Suggestions Modal */}
+      <OutfitInspireModal
+        isOpen={inspireModalOpen}
+        onClose={() => setInspireModalOpen(false)}
+        outfit={outfit}
+        weather={weather}
+        onSwapItem={handleSwapOutfitItem}
       />
 
       {/* Authentication Modal */}

@@ -26,6 +26,7 @@ interface TodayViewProps {
     includeJacket?: boolean
   ) => void;
   onWearToday: () => void;
+  onOpenInspire: () => void;
   items: ClothingItem[];
   onOpenUpload: () => void;
   onSeedSampleWardrobe: () => void;
@@ -41,6 +42,7 @@ export const TodayView: React.FC<TodayViewProps> = ({
   outfitLoading,
   onRecommendOutfit,
   onWearToday,
+  onOpenInspire,
   items,
   onOpenUpload,
   onSeedSampleWardrobe,
@@ -171,6 +173,7 @@ export const TodayView: React.FC<TodayViewProps> = ({
             onChangeVibe={handleVibeChange}
             onShuffle={handleShuffle}
             onWearToday={onWearToday}
+            onOpenInspire={onOpenInspire}
             loading={outfitLoading}
           />
         </div>
