@@ -24,4 +24,20 @@ class Settings:
     UPLOADS_DIR: Path = UPLOADS_DIR
     STATIC_DIR: Path = STATIC_DIR
 
+    # JWT & Auth Security
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "fitcast-super-secret-key-development-mode-change-in-prod-2026")
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_DAYS: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_DAYS", "7"))
+    COOKIE_NAME: str = "fitcast_session"
+
+    # Authentik OIDC
+    AUTHENTIK_CLIENT_ID: str = os.getenv("AUTHENTIK_CLIENT_ID", "")
+    AUTHENTIK_CLIENT_SECRET: str = os.getenv("AUTHENTIK_CLIENT_SECRET", "")
+    AUTHENTIK_ISSUER_URL: str = os.getenv("AUTHENTIK_ISSUER_URL", "")
+    AUTHENTIK_REDIRECT_URI: str = os.getenv("AUTHENTIK_REDIRECT_URI", "")
+
+    @property
+    def authentik_enabled(self) -> bool:
+        return bool(self.AUTHENTIK_CLIENT_ID and self.AUTHENTIK_ISSUER_URL)
+
 settings = Settings()

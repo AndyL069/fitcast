@@ -1,25 +1,55 @@
+from typing import Optional, List
 from datetime import datetime
-from typing import List, Optional
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, EmailStr
 
+# ============================
+# User / Auth Schemas
+# ============================
+class UserCreate(BaseModel):
+    email: EmailStr
+    username: str
+    password: str
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+class UserResponse(BaseModel):
+    id: int
+    email: str
+    username: str
+    auth_provider: str
+    avatar_url: Optional[str] = None
+    is_active: bool
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+class ProvidersResponse(BaseModel):
+    authentik_enabled: bool
+
+# ============================
+# Clothing Item Schemas
+# ============================
 class ClothingItemBase(BaseModel):
-    category: str = Field(..., description="'top', 'pants', or 'shoes'")
-    name: str = Field(..., description="Descriptive name")
-    color: str = "neutral"
+    category: str
+    name: str
+    color: Optional[str] = "neutral"
     secondary_colors: Optional[str] = "[]"
-    pattern: str = "solid"
-    fabric: str = "cotton"
-    warmth_level: int = Field(3, ge=1, le=5, description="1 (coolest) to 5 (warmest)")
-    formality: str = "casual"
-    waterproof: bool = False
+    pattern: Optional[str] = "einfarbig"
+    fabric: Optional[str] = "Baumwolle"
+    warmth_level: Optional[int] = 3
+    formality: Optional[str] = "casual"
+    waterproof: Optional[bool] = False
 
 class ClothingItemCreate(ClothingItemBase):
-    image_url: str
+    pass
 
 class ClothingItemUpdate(BaseModel):
     category: Optional[str] = None
     name: Optional[str] = None
     color: Optional[str] = None
+    secondary_colors: Optional[str] = None
     pattern: Optional[str] = None
     fabric: Optional[str] = None
     warmth_level: Optional[int] = None
@@ -28,20 +58,29 @@ class ClothingItemUpdate(BaseModel):
 
 class ClothingItemResponse(ClothingItemBase):
     id: int
+    user_id: Optional[int] = None
     image_url: str
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
 
+# ============================
+# Weather & Outfit Schemas
+# ============================
 class WeatherSummary(BaseModel):
     temperature: float
-    apparent_temperature: float
-    precipitation: float
-    weather_code: int
+    apparent_temperature: Optional[float] = None
+    temp_max: Optional[float] = None
+    temp_min: Optional[float] = None
+    precipitation: float = 0.0
+    precipitation_probability: Optional[float] = 0.0
+    weather_code: int = 0
+    condition: Optional[str] = "Klar"
     is_rainy: bool = False
     is_snowy: bool = False
+    wind_speed: Optional[float] = 0.0
     comfort_target: int = 3
-    city: Optional[str] = "Your Location"
+    city: Optional[str] = "Berlin"
 
 class OutfitRecommendRequest(BaseModel):
     weather: WeatherSummary
@@ -55,5 +94,5 @@ class OutfitRecommendResponse(BaseModel):
     pants: ClothingItemResponse
     shoes: ClothingItemResponse
     ai_explanation: str
-    styling_tips: Optional[List[str]] = []
-    weather_fit_score: int = Field(90, ge=0, le=100)
+    styling_tips: List[str]
+    weather_fit_score: int
