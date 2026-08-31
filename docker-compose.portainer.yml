@@ -1,4 +1,4 @@
-# Portainer Stack für FitCast mit dedizierter PostgreSQL 16 Datenbank
+# Portainer Stack für FitCast mit PostgreSQL 16 & Authentik
 services:
   db:
     image: postgres:16-alpine
@@ -23,6 +23,9 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    extra_hosts:
+      - "auth.am-homelab.de:192.168.178.117"
+      - "fitcast.am-homelab.de:192.168.178.117"
     ports:
       - "${PORT:-3004}:8000"
     environment:
@@ -36,7 +39,7 @@ services:
       GEMINI_API_KEY: ${GEMINI_API_KEY}
       GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
       
-      # Optional: Authentik OIDC SSO
+      # Authentik OIDC SSO
       AUTHENTIK_CLIENT_ID: ${AUTHENTIK_CLIENT_ID}
       AUTHENTIK_CLIENT_SECRET: ${AUTHENTIK_CLIENT_SECRET}
       AUTHENTIK_ISSUER: ${AUTHENTIK_ISSUER}
