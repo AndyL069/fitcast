@@ -1,13 +1,14 @@
 import React from 'react';
-import { Trash2, Flame, ShieldCheck } from 'lucide-react';
+import { Trash2, Flame, ShieldCheck, Pencil } from 'lucide-react';
 import { ClothingItem } from '../types';
 
 interface ItemCardProps {
   item: ClothingItem;
   onDelete: (id: number) => void;
+  onEdit?: (item: ClothingItem) => void;
 }
 
-export const ItemCard: React.FC<ItemCardProps> = ({ item, onDelete }) => {
+export const ItemCard: React.FC<ItemCardProps> = ({ item, onDelete, onEdit }) => {
   const categoryLabels = {
     top: 'Oberteil',
     pants: 'Hose',
@@ -53,22 +54,45 @@ export const ItemCard: React.FC<ItemCardProps> = ({ item, onDelete }) => {
           </span>
         )}
 
-        {/* Delete button (hover only) */}
-        <button
-          onClick={() => onDelete(item.id)}
-          className="absolute bottom-2.5 right-2.5 p-2 bg-white/90 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-xl shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-200 active:scale-90"
-          title="Kleidungsstück löschen"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
+        {/* Action Buttons (hover overlay) */}
+        <div className="absolute bottom-2.5 right-2.5 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200">
+          {onEdit && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(item);
+              }}
+              className="p-2 bg-white/95 hover:bg-blue-50 text-slate-500 hover:text-blue-600 rounded-xl shadow-md transition-all duration-200 active:scale-90"
+              title="Kleidungsstück bearbeiten"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+            </button>
+          )}
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(item.id);
+            }}
+            className="p-2 bg-white/95 hover:bg-rose-50 text-slate-500 hover:text-rose-600 rounded-xl shadow-md transition-all duration-200 active:scale-90"
+            title="Kleidungsstück löschen"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </div>
 
       {/* Info details */}
-      <div className="p-3.5 flex-1 flex flex-col justify-between">
+      <div 
+        onClick={() => onEdit && onEdit(item)}
+        className="p-3.5 flex-1 flex flex-col justify-between cursor-pointer hover:bg-slate-50/50 transition-colors"
+      >
         <div>
-          <h4 className="text-sm font-bold text-slate-900 line-clamp-1">
-            {item.name}
-          </h4>
+          <div className="flex items-center justify-between gap-1">
+            <h4 className="text-sm font-bold text-slate-900 line-clamp-1 group-hover:text-blue-600 transition-colors">
+              {item.name}
+            </h4>
+          </div>
           <div className="flex flex-wrap items-center gap-1.5 mt-1.5 text-xs text-slate-500">
             <span className="capitalize px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-medium">
               {item.color}

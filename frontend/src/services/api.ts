@@ -90,6 +90,17 @@ export const api = {
     return res.json();
   },
 
+  async updateItem(id: number, data: Partial<ClothingItem>): Promise<ClothingItem> {
+    const res = await fetch(`${API_BASE}/items/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+      credentials: 'include',
+    });
+    if (!res.ok) throw new Error('Kleidungsstück konnte nicht aktualisiert werden');
+    return res.json();
+  },
+
   async deleteItem(id: number): Promise<void> {
     const res = await fetch(`${API_BASE}/items/${id}`, {
       method: 'DELETE',

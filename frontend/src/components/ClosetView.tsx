@@ -7,6 +7,7 @@ interface ClosetViewProps {
   items: ClothingItem[];
   onOpenUpload: () => void;
   onDeleteItem: (id: number) => void;
+  onEditItem?: (item: ClothingItem) => void;
   onSeedSampleWardrobe: () => void;
   seeding: boolean;
 }
@@ -15,6 +16,7 @@ export const ClosetView: React.FC<ClosetViewProps> = ({
   items,
   onOpenUpload,
   onDeleteItem,
+  onEditItem,
   onSeedSampleWardrobe,
   seeding
 }) => {
@@ -97,6 +99,7 @@ export const ClosetView: React.FC<ClosetViewProps> = ({
               key={item.id}
               item={item}
               onDelete={onDeleteItem}
+              onEdit={onEditItem}
             />
           ))}
         </div>

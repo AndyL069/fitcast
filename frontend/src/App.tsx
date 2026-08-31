@@ -13,6 +13,7 @@ import { TodayView } from './components/TodayView';
 import { ClosetView } from './components/ClosetView';
 import { HistoryView } from './components/HistoryView';
 import { UploadModal } from './components/UploadModal';
+import { EditItemModal } from './components/EditItemModal';
 import { AuthModal } from './components/AuthModal';
 import { AlertCircle, X } from 'lucide-react';
 
@@ -23,6 +24,7 @@ const MainApp: React.FC = () => {
   const [items, setItems] = useState<ClothingItem[]>([]);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<ClothingItem | null>(null);
   const [seeding, setSeeding] = useState(false);
   const [authErrorBanner, setAuthErrorBanner] = useState<string | null>(null);
 
@@ -178,6 +180,23 @@ const MainApp: React.FC = () => {
     setItems((prev) => [item, ...prev]);
   };
 
+  const handleItemUpdated = (updated: ClothingItem) => {
+    setItems((prev) => prev.map((i) => (i.id === updated.id ? updated : i)));
+    // Update live outfit if it contains this item
+    setOutfit((curr) => {
+      if (!curr) return null;
+      let newTop = curr.top.id === updated.id ? updated : curr.top;
+      let newPants = curr.pants.id === updated.id ? updated : curr.pants;
+      let newShoes = curr.shoes.id === updated.id ? updated : curr.shoes;
+      return {
+        ...curr,
+        top: newTop,
+        pants: newPants,
+        shoes: newShoes,
+      };
+    });
+  };
+
   const handleDeleteItem = async (id: number) => {
     if (!confirm('Möchtest du dieses Kleidungsstück wirklich aus deinem Schrank entfernen?')) return;
     try {
@@ -282,6 +301,7 @@ const MainApp: React.FC = () => {
             items={items}
             onOpenUpload={() => setUploadModalOpen(true)}
             onDeleteItem={handleDeleteItem}
+            onEditItem={(item) => setEditingItem(item)}
             onSeedSampleWardrobe={handleSeedSampleWardrobe}
             seeding={seeding}
           />
@@ -300,6 +320,14 @@ const MainApp: React.FC = () => {
         isOpen={uploadModalOpen}
         onClose={() => setUploadModalOpen(false)}
         onItemAdded={handleItemAdded}
+      />
+
+      {/* Edit Item Modal */}
+      <EditItemModal
+        item={editingItem}
+        isOpen={Boolean(editingItem)}
+        onClose={() => setEditingItem(null)}
+        onItemUpdated={handleItemUpdated}
       />
 
       {/* Authentication Modal */}
