@@ -141,7 +141,7 @@ async def authentik_login(request: Request, response: Response):
 
     state = secrets.token_urlsafe(32)
     redirect_uri = get_redirect_uri(request)
-    auth_url = await authentik_service.build_authorization_url(redirect_uri=redirect_uri, state=state)
+    auth_url = authentik_service.build_authorization_url(redirect_uri=redirect_uri, state=state)
 
     resp = RedirectResponse(url=auth_url, status_code=status.HTTP_302_FOUND)
     resp.set_cookie(

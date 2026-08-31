@@ -16,43 +16,14 @@ class AuthentikService:
         self._oidc_config: Optional[Dict[str, Any]] = None
 
     def _get_base_url(self) -> str:
+        if not self.issuer_url:
+            return ""
         parsed = urllib.parse.urlparse(self.issuer_url)
         return f"{parsed.scheme}://{parsed.netloc}"
 
-    async def get_oidc_config(self) -> Dict[str, Any]:
-        if self._oidc_config:
-            return self._oidc_config
-
+    def build_authorization_url(self, redirect_uri: str, state: str) -> str:
         base_url = self._get_base_url()
-        
-        # Try both the full issuer discovery and the root discovery
-        discovery_urls = [
-            f"{self.issuer_url}/.well-known/openid-configuration",
-            f"{base_url}/.well-known/openid-configuration"
-        ]
-
-        for url in discovery_urls:
-            try:
-                async with httpx.AsyncClient(timeout=8.0, verify=False) as client:
-                    res = await client.get(url)
-                    if res.status_code == 200:
-                        self._oidc_config = res.json()
-                        return self._oidc_config
-            except Exception as e:
-                print(f"OIDC discovery at {url} failed: {e}")
-
-        # Correct Authentik standard fallback endpoints based on root domain
-        self._oidc_config = {
-            "authorization_endpoint": f"{base_url}/application/o/authorize/",
-            "token_endpoint": f"{base_url}/application/o/token/",
-            "userinfo_endpoint": f"{base_url}/application/o/userinfo/"
-        }
-        return self._oidc_config
-
-    async def build_authorization_url(self, redirect_uri: str, state: str) -> str:
-        config = await self.get_oidc_config()
-        base_url = self._get_base_url()
-        auth_endpoint = config.get("authorization_endpoint", f"{base_url}/application/o/authorize/")
+        auth_endpoint = f"{base_url}/application/o/authorize/"
 
         params = {
             "client_id": self.client_id,
@@ -62,14 +33,12 @@ class AuthentikService:
             "state": state
         }
         query_string = urllib.parse.urlencode(params)
-        delimiter = "&" if "?" in auth_endpoint else "?"
-        return f"{auth_endpoint}{delimiter}{query_string}"
+        return f"{auth_endpoint}?{query_string}"
 
     async def exchange_code_for_user(self, code: str, redirect_uri: str) -> Dict[str, Any]:
-        config = await self.get_oidc_config()
         base_url = self._get_base_url()
-        token_endpoint = config.get("token_endpoint", f"{base_url}/application/o/token/")
-        userinfo_endpoint = config.get("userinfo_endpoint", f"{base_url}/application/o/userinfo/")
+        token_endpoint = f"{base_url}/application/o/token/"
+        userinfo_endpoint = f"{base_url}/application/o/userinfo/"
 
         # 1. Exchange code for access token
         data = {
@@ -82,16 +51,20 @@ class AuthentikService:
 
         async with httpx.AsyncClient(timeout=10.0, verify=False) as client:
             token_res = await client.post(token_endpoint, data=data)
+            if token_res.status_code != 200:
+                print(f"Authentik token exchange error {token_res.status_code}: {token_res.text}")
             token_res.raise_for_status()
             token_data = token_res.json()
             access_token = token_data.get("access_token")
 
             if not access_token:
-                raise ValueError("No access token returned from Authentik")
+                raise ValueError(f"No access token returned from Authentik: {token_data}")
 
             # 2. Fetch UserInfo
             headers = {"Authorization": f"Bearer {access_token}"}
             user_res = await client.get(userinfo_endpoint, headers=headers)
+            if user_res.status_code != 200:
+                print(f"Authentik userinfo error {user_res.status_code}: {user_res.text}")
             user_res.raise_for_status()
             user_info = user_res.json()
 
